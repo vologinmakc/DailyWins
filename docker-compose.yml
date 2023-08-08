@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  dailywins_nginx_backend:
+    image: nginx:latest
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/application
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - dailywins_php
+
+  dailywins_nginx_frontend:
+    image: nginx:latest
+    ports:
+      - "8001:80"
+    volumes:
+      - ./spa:/spa
+      - ./docker/nginx/spa.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - dailywins_node
+
+
+  dailywins_postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: dailywins
+    volumes:
+      - dailywins_db_data:/var/lib/postgresql/data
+
+  dailywins_php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - ./src:/application
+    working_dir: /application
+    depends_on:
+      - dailywins_postgres
+      - dailywins_redis
+
+
+  dailywins_redis:
+    image: redis:latest
+
+  dailywins_node:
+    build:
+      context: .
+      dockerfile: docker/node/DockerFile
+    volumes:
+      - ./spa:/app
+    depends_on:
+      - dailywins_php
+
+volumes:
+  dailywins_db_data:

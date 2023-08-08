@@ -1,0 +1,17 @@
+# Используем LTS версию Node.js
+FROM node:16
+
+# Установите рабочую директорию
+WORKDIR /app
+
+# Копируем package.json и package-lock.json (если он существует)
+COPY spa/package*.json ./
+
+# Установите зависимости
+RUN npm install
+
+# Копируем остальные файлы и папки проекта
+COPY spa/ ./
+
+# Запускаем приложение
+CMD ["npm", "run", "serve"]

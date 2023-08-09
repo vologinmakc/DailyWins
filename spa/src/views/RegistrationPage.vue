@@ -4,7 +4,7 @@
     <v-row align="center" justify="center">
       <v-col cols="12" sm="8" md="4">
         <v-card class="elevation-12">
-          <v-toolbar color="primary" dark flat>
+          <v-toolbar dark flat>
             <v-toolbar-title>Регистрация</v-toolbar-title>
           </v-toolbar>
           <v-card-text>
@@ -28,7 +28,7 @@
               ></v-text-field>
               <v-row>
                 <v-col>
-                  <v-btn type="submit" block>Регистрация</v-btn>
+                  <v-btn type="submit" dark block>Регистрация</v-btn>
                 </v-col>
               </v-row>
             </v-form>

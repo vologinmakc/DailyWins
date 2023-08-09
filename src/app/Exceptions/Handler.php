@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Constants\Response\ResponseStatuses;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -26,5 +27,14 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Throwable $e)
+    {
+        return response()->json([
+            'result_code' => ResponseStatuses::ERROR,
+            'result_message' => ResponseStatuses::MESSAGES[ResponseStatuses::ERROR],
+            'data' => $e->getMessage()
+        ], 500);
     }
 }

@@ -13,7 +13,7 @@ RUN apt-get install -y \
   && docker-php-ext-install zip
 
 # Установка xDebug и его конфигурация
-RUN pecl install xdebug && docker-php-ext-enable xdebug
+RUN pecl install xdebug
 COPY docker/php/xdebug.ini /usr/local/etc/php/conf.d/
 
 # Установка Composer

@@ -30,6 +30,8 @@ services:
       POSTGRES_DB: dailywins
     volumes:
       - dailywins_db_data:/var/lib/postgresql/data
+    ports:
+      - "54321:5432"
 
   dailywins_php:
     build:
@@ -38,6 +40,8 @@ services:
     volumes:
       - ./src:/application
     working_dir: /application
+    environment:
+      PHP_IDE_CONFIG: "serverName=daylywins"
     depends_on:
       - dailywins_postgres
       - dailywins_redis

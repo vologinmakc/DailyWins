@@ -179,4 +179,22 @@ class TaskControllerTest extends TestCase
         $this->assertCount(0, Arr::get($tasksData, 'data')); // Убедимся, что нет задач
     }
 
+    public function testExpandUserFieldInTasksResponse()
+    {
+        // Создаем задачи для текущего пользователя
+        Task::factory()->count(3)->create(['created_by' => $this->user->id]);
+
+        // Делаем запрос к задачам с параметром expand=user
+        $response = $this->getJson('/api/tasks?expand=user');
+
+        // Проверяем, что в ответе у каждой задачи есть поле user с id пользователя
+        $response->assertStatus(200);
+
+        $tasksData = $response->json('data');
+        foreach ($tasksData as $taskData) {
+            $this->assertEquals($this->user->id, Arr::get($taskData, 'user.id'));
+        }
+    }
+
+
 }

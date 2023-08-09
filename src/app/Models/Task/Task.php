@@ -2,14 +2,16 @@
 
 namespace App\Models\Task;
 
+use App\Models\BaseModel;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property SubTask $subtasks
- * @property int $created_by
+ * @property int     $created_by
+ * @property User    $author
  */
-class Task extends Model
+class Task extends BaseModel
 {
     use HasFactory;
 
@@ -19,6 +21,11 @@ class Task extends Model
     public function subtasks()
     {
         return $this->hasMany(SubTask::class);
+    }
+
+    public function author()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
 }

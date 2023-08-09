@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Task;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use App\Http\Requests\Task\StoreSubTaskRequest;
 use App\Http\Requests\Task\UpdateSubTaskRequest;
 use App\Interfaces\Repository\SubTaskRepositoryInterface;
@@ -12,7 +12,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class SubTaskController extends Controller
+class SubTaskController extends BaseController
 {
     protected $subTaskRepository;
 
@@ -33,13 +33,13 @@ class SubTaskController extends Controller
         }
         DB::commit();
 
-        return $subTask;
+        return $this->response($subTask);
     }
 
     public function show(SubTask $subTask)
     {
         if ($subTask->created_by == Auth::id()) {
-            return $subTask;
+            return $this->response($subTask);
         }
 
         throw new AuthorizationException('Данная задача не ваша');
@@ -59,7 +59,7 @@ class SubTaskController extends Controller
 
             DB::commit();
 
-            return $subTask;
+            return $this->response($subTask);
         }
 
         throw new AuthorizationException('Данная задача не ваша');
@@ -78,7 +78,7 @@ class SubTaskController extends Controller
             }
             DB::commit();
 
-            return [];
+            return $this->response([]);
         }
 
         throw new AuthorizationException('Данная задача не ваша');

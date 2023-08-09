@@ -8,6 +8,7 @@ use App\Models\Task\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -143,6 +144,39 @@ class TaskControllerTest extends TestCase
         // Пытаемся удалить задачу первого пользователя от имени второго пользователя
         $response = $this->deleteJson('/api/tasks/' . $task->id);
         $response->assertJsonPath('result_code', ResponseStatuses::ERROR);
+    }
+
+    public function testIndexMethodAppliesFiltersAndSorting()
+    {
+        // Создаем задачи для текущего пользователя
+        $tasks = Task::factory()->count(5)->create(['created_by' => $this->user->id]);
+
+        // Применяем фильтр по имени и сортировку по убыванию ID
+        $filteredTaskName = $tasks->first()->name;
+        $response = $this->getJson('/api/tasks?search[name]=' . $filteredTaskName . '&sort=-id');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'data') // Проверяем, что вернулась только одна задача
+            ->assertJsonFragment(['name' => $filteredTaskName]);
+    }
+
+    public function testTasksAreFilteredByUser()
+    {
+        $user2 = User::factory()->create();
+
+        // Создаем задачи для первого пользователя
+        Task::factory()->count(3)->create(['created_by' => $this->user->id]);
+
+        // Авторизуемся под вторым пользователем
+        $this->actingAs($user2);
+
+        // Делаем запрос на получение всех задач
+        $response = $this->getJson('/api/tasks');
+
+        // Проверяем, что у второго пользователя нет задач, созданных первым пользователем
+        $response->assertStatus(200);
+        $tasksData = $response->json();
+        $this->assertCount(0, Arr::get($tasksData, 'data')); // Убедимся, что нет задач
     }
 
 }

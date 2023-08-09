@@ -137,6 +137,7 @@
       <path value="$PROJECT_DIR$/src/vendor/psr/clock" />
       <path value="$PROJECT_DIR$/src/vendor/symfony/psr-http-message-bridge" />
       <path value="$PROJECT_DIR$/src/vendor/laravel/passport" />
+      <path value="$PROJECT_DIR$/src/vendor/laravel/helpers" />
     </include_path>
   </component>
   <component name="PhpInterpreters">

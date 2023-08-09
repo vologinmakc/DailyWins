@@ -134,6 +134,7 @@
       <excludeFolder url="file://$MODULE_DIR$/src/vendor/phpseclib/phpseclib" />
       <excludeFolder url="file://$MODULE_DIR$/src/vendor/psr/clock" />
       <excludeFolder url="file://$MODULE_DIR$/src/vendor/symfony/psr-http-message-bridge" />
+      <excludeFolder url="file://$MODULE_DIR$/src/vendor/laravel/helpers" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

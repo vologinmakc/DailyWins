@@ -27,6 +27,7 @@ class SubTaskController extends BaseController
         try {
             $dto = new SubTaskDto($request->validated());
             $subTask = $this->subTaskRepository->create($dto);
+            $this->subTaskRepository->createSnapshot($subTask->task);
         } catch (\Throwable $exception) {
             DB::rollBack();
             throw $exception;
@@ -72,6 +73,7 @@ class SubTaskController extends BaseController
             DB::beginTransaction();
             try {
                 $subTask->delete();
+                $this->subTaskRepository->createSnapshot($subTask->task);
             } catch (\Throwable $exception) {
                 DB::rollBack();
                 throw $exception;

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Task;
 
+use App\Constants\Other\WeekDays;
+use App\Constants\Task\TaskType;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTaskRequest extends FormRequest
@@ -23,11 +25,14 @@ class StoreTaskRequest extends FormRequest
     {
         return [
             'name'                   => 'required|string|max:255',
-            'status'                 => 'required|integer',
+            'description'            => 'nullable|string',
+            'start_date'             => 'required|date|after_or_equal:today',
+            'type'                   => 'required|integer|in:' . implode(',', TaskType::getList()), // добавляем валидацию для поля type
+            'recurrence'             => 'required_if:type,' . TaskType::TYPE_RECURRING . '|nullable|array',
+            'recurrence.*'           => 'in:' . implode(',', WeekDays::getList()),
             'subtasks'               => 'array|nullable',
             'subtasks.*.name'        => 'required|string|max:255',
             'subtasks.*.description' => 'string|nullable',
-            'subtasks.*.status'      => 'required|integer',
         ];
     }
 }

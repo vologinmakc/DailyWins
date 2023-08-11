@@ -2,7 +2,9 @@
 
 namespace App\Constants\Response;
 
-class ResponseStatuses
+use App\Constants\BaseConstant;
+
+class ResponseStatuses extends BaseConstant
 {
     const COMPLETE = 'COMPLETE';
     const ERROR    = 'ERROR';
@@ -12,4 +14,12 @@ class ResponseStatuses
         self::COMPLETE => 'Операция полностью успешно выполнена.',
         self::ERROR    => 'Произошла ошибка при выполнении операции.'
     ];
+
+    static function getList()
+    {
+        return [
+            self::COMPLETE,
+            self::ERROR
+        ];
+    }
 }

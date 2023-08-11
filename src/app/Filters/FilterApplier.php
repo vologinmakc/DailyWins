@@ -28,7 +28,8 @@ class FilterApplier
         $filters = $request->input('search', []);
 
         foreach ($filters as $filterName => $value) {
-            $filterClass = 'App\\Filters\\' . class_basename($modelClass) . '\\' . ucfirst($filterName) . 'Filter';
+            $filterClassName = Str::studly(str_replace(['-', '_'], ' ', $filterName));
+            $filterClass = 'App\\Filters\\' . class_basename($modelClass) . '\\' . $filterClassName . 'Filter';
             if (class_exists($filterClass)) {
                 $filter = new $filterClass;
                 $query = $filter->apply($query, $value);

@@ -21,9 +21,12 @@ class TaskRepository implements TaskRepositoryInterface
     public function create(TaskDto $taskDto)
     {
         $task = Task::create([
-            'name'       => $taskDto->name,
-            'status'     => $taskDto->status,
-            'created_by' => Auth::id()
+            'name'        => $taskDto->name,
+            'description' => $taskDto->description,
+            'start_date'  => $taskDto->startDate,
+            'type'        => $taskDto->type,
+            'recurrence'  => $taskDto->recurrence,
+            'created_by'  => Auth::id()
         ]);
 
         foreach ($taskDto->subtasks as $subtaskData) {

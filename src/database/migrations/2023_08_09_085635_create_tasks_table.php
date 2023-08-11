@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,7 +13,10 @@ return new class extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedTinyInteger('status');
+            $table->string('description', '255')->nullable();
+            $table->timestamp('start_date');
+            $table->jsonb('recurrence')->nullable();
+            $table->unsignedSmallInteger('type');
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });

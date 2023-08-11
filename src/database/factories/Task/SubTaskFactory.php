@@ -21,8 +21,7 @@ class SubTaskFactory extends Factory
     {
         return [
             'name'        => $this->faker->name,
-            'description' => $this->faker->text('15'),
-            'status'      => TaskStatuses::TASK_IN_PROGRESS
+            'description' => $this->faker->text('15')
         ];
     }
 }

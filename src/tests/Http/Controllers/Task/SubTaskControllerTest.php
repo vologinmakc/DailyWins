@@ -38,7 +38,6 @@ class SubTaskControllerTest extends TestCase
         $subTaskData = [
             'name'        => 'SubTask Name',
             'description' => 'SubTask Description',
-            'status'      => 1,
             'task_id'     => $task->id
         ];
 
@@ -59,11 +58,11 @@ class SubTaskControllerTest extends TestCase
             ])
             ->assertJsonPath('data.name', $subTaskData['name'])
             ->assertJsonPath('data.description', $subTaskData['description'])
-            ->assertJsonPath('data.status', $subTaskData['status'])
             ->assertJsonPath('data.task_id', $subTaskData['task_id'])
             ->assertJsonPath('data.created_by', $this->user->id);
 
         $this->assertDatabaseHas('sub_tasks', $subTaskData);
+        $this->assertDatabaseHas('sub_task_snapshots', ['task_id' => $task->id]);
     }
 
     public function testReadSubTask()
@@ -118,6 +117,7 @@ class SubTaskControllerTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('sub_tasks', ['id' => $subTask->id]);
+        $this->assertDatabaseHas('sub_task_snapshots', ['task_id' => $task->id]);
     }
 
     public function testUnauthorizedAccessToSubTasks()

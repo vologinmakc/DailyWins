@@ -9,6 +9,7 @@ use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Models\Task\Task;
 use App\Rules\RuleApplier;
 use App\Services\Dto\Task\TaskDto;
+use App\Services\Task\Handler\TaskHandlerFactory;
 use App\Services\Task\TaskService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
@@ -17,11 +18,13 @@ use Illuminate\Support\Facades\DB;
 
 class TaskController extends BaseController
 {
-    private TaskService $taskService;
+    private TaskService        $taskService;
+    private TaskHandlerFactory $handlerFactory;
 
-    public function __construct(TaskService $taskService)
+    public function __construct(TaskService $taskService, TaskHandlerFactory $handlerFactory)
     {
         $this->taskService = $taskService;
+        $this->handlerFactory = $handlerFactory;
     }
 
     public function index(Request $request, FilterApplier $filterApplier, RuleApplier $ruleApplier)
@@ -44,7 +47,9 @@ class TaskController extends BaseController
         DB::beginTransaction();
         try {
             $dto = new TaskDto($request->validated());
-            $task = $this->taskService->createTask($dto);
+
+            $handler = $this->handlerFactory->make($dto->type);
+            $task = $handler->create($dto);
         } catch (\Throwable $exception) {
             DB::rollBack();
             throw $exception;
@@ -56,6 +61,10 @@ class TaskController extends BaseController
 
     public function show(Task $task)
     {
+        Task::setExpandField([
+            'history' => fn (Task $task) => $task->history->getExpandedTasks()
+        ]);
+
         if ($task->created_by == Auth::id()) {
             return $this->response($task->load('subtasks'));
         }
@@ -65,20 +74,27 @@ class TaskController extends BaseController
 
     public function update(UpdateTaskRequest $request, Task $task)
     {
-        if ($task->created_by == Auth::id()) {
-            DB::beginTransaction();
-            try {
-                $task = $this->taskService->updateTask($task, new TaskDto($request->validationData()));
-            } catch (\Throwable $exception) {
-                DB::rollBack();
-                throw $exception;
-            }
-            DB::commit();
-
-            return $this->response($task);
+        if ($task->created_by != Auth::id()) {
+            throw new AuthorizationException('Данная задача не ваша');
         }
 
-        throw new AuthorizationException('Данная задача не ваша');
+        $dto = new TaskDto($request->validated());
+
+        // Если тип задачи не предоставлен в запросе, используем текущий тип задачи из модели
+        $taskType = $dto->type ?? $task->type;
+
+        $handler = $this->handlerFactory->make($taskType);
+
+        DB::beginTransaction();
+        try {
+            $updatedTask = $handler->update($task, $dto);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            throw $exception;
+        }
+        DB::commit();
+
+        return $this->response($updatedTask);
     }
 
     public function destroy(Task $task)

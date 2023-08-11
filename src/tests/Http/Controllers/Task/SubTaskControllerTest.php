@@ -3,12 +3,20 @@
 namespace Tests\Http\Controllers\Task;
 
 
+use App\Constants\Other\WeekDays;
 use App\Constants\Response\ResponseStatuses;
+use App\Constants\Task\TaskStatuses;
+use App\Constants\Task\TaskType;
 use App\Models\Task\SubTask;
+use App\Models\Task\SubTaskSnapshot;
+use App\Models\Task\SubTaskStatus;
 use App\Models\Task\Task;
+use App\Models\Task\TaskHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -33,7 +41,8 @@ class SubTaskControllerTest extends TestCase
     public function testCreateSubTask()
     {
         $task = Task::factory()->create([
-            'created_by' => $this->user->id
+            'created_by' => $this->user->id,
+            'type'       => TaskType::TYPE_RECURRING
         ]);
         $subTaskData = [
             'name'        => 'SubTask Name',
@@ -102,7 +111,7 @@ class SubTaskControllerTest extends TestCase
         $this->assertDatabaseHas('sub_tasks', array_merge(['id' => $subTask->id], $updatedData));
     }
 
-    public function testDeleteSubTask()
+    public function testSoftDeleteSubTask()
     {
         $task = Task::factory()->create([
             'created_by' => $this->user->id
@@ -113,11 +122,51 @@ class SubTaskControllerTest extends TestCase
             'task_id'    => $task->id
         ]);
 
-        $response = $this->deleteJson('/api/subtasks/' . $subTask->id);
+        // Добавим статус для подзадачи
+        SubTaskStatus::create([
+            'sub_task_id' => $subTask->id,
+            'date'        => now(),
+            'status'      => TaskStatuses::TASK_COMPLETED
+        ]);
 
+        $response = $this->deleteJson('/api/subtasks/' . $subTask->id);
         $response->assertStatus(200);
+
+        // Проверка на наличие мягко удаленной записи в базе данных
+        $this->assertDatabaseHas('sub_tasks', ['id' => $subTask->id, 'deleted_at' => now()]);
+
+        // Проверка отсутствия подзадачи при стандартном запросе через Eloquent
+        $this->assertNull(SubTask::find($subTask->id));
+
+        // Проверка наличия подзадачи при запросе с учетом мягко удаленных записей
+        $this->assertNotNull(SubTask::withTrashed()->find($subTask->id));
+
+        // Проверка сохранения статусов подзадачи
+        $this->assertNotEmpty($subTask->getSubTaskStatusForDate());
+    }
+
+    public function testCascadeDeleteOnMainTaskDelete()
+    {
+        $task = Task::factory()->create([
+            'created_by' => $this->user->id
+        ]);
+
+        $subTask = SubTask::factory()->create([
+            'created_by' => $this->user->id,
+            'task_id'    => $task->id
+        ]);
+
+        $response = $this->deleteJson('/api/tasks/' . $task->id);
+        $response->assertStatus(200);
+
+        // Проверка на отсутствие основной задачи в базе данных
+        $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+
+        // Проверка на отсутствие подзадачи в базе данных
         $this->assertDatabaseMissing('sub_tasks', ['id' => $subTask->id]);
-        $this->assertDatabaseHas('sub_task_snapshots', ['task_id' => $task->id]);
+
+        // Проверка на отсутствие статусов для удаленной подзадачи
+        $this->assertEmpty($subTask->getSubTaskStatusForDate());
     }
 
     public function testUnauthorizedAccessToSubTasks()
@@ -127,7 +176,7 @@ class SubTaskControllerTest extends TestCase
             'created_by' => $this->user->id
         ]);
         $subTask = SubTask::factory()->create([
-            'task_id' => $task->id,
+            'task_id'    => $task->id,
             'created_by' => $this->user->id
         ]);
 
@@ -147,5 +196,90 @@ class SubTaskControllerTest extends TestCase
         // Пытаемся удалить подзадачу первого пользователя от имени второго пользователя
         $response = $this->deleteJson('/api/subtasks/' . $subTask->id);
         $response->assertJsonPath('result_code', ResponseStatuses::ERROR);
+    }
+
+    public function testUpdateSubTaskStatus()
+    {
+        $task = Task::factory()->create([
+            'created_by' => $this->user->id,
+            'type'       => TaskType::TYPE_RECURRING
+        ]);
+
+        $subTask = SubTask::factory()->create([
+            'created_by' => $this->user->id,
+            'task_id'    => $task->id
+        ]);
+
+        $newStatus = TaskStatuses::TASK_COMPLETED;
+
+        $response = $this->postJson('/api/subtasks/' . $subTask->id . '/status', ['status' => $newStatus]);
+
+        $response->assertStatus(200);
+
+        // Проверяем, что подзадача существует
+        $this->assertDatabaseHas('sub_tasks', ['id' => $subTask->id]);
+
+        // Проверяем, что слепок был создан для задачи
+        $this->assertDatabaseHas('sub_task_snapshots', ['task_id' => $task->id]);
+
+        // Проверяем, что статус подзадачи был обновлен
+        $this->assertDatabaseHas('sub_task_statuses', ['sub_task_id' => $subTask->id, 'status' => $newStatus]);
+    }
+
+    public function testTaskWithSubTaskHistory()
+    {
+        // 1. Создаем задачу с подзадачами
+        $initialRecurrence = [WeekDays::TUESDAY];
+        $task = Task::factory()->create([
+            'created_by' => $this->user->id,
+            'type'       => TaskType::TYPE_RECURRING,
+            'recurrence' => json_encode($initialRecurrence)
+        ]);
+        $subTaskData = [
+            'name'        => 'Удаленная',
+            'description' => 'SubTask Description',
+            'task_id'     => $task->id
+        ];
+
+        $response = $this->postJson('/api/subtasks', $subTaskData);
+        $response->assertStatus(200);
+        $subTaskId = $response->json()['data']['id'];
+
+        // 2. Создаем первый слепок истории задачи
+        TaskHistory::create([
+            'task_id'    => $task->id,
+            'recurrence' => $initialRecurrence,
+            'changed_at' => Carbon::now()
+        ]);
+
+        // 3. Имитируем прохождение времени
+        Carbon::setTestNow(Carbon::now()->addWeeks(3));
+
+        // 4. Добавим новую подзадачу и удалим старую через api
+        $subTaskData = [
+            'name'        => 'Новая',
+            'description' => 'SubTask Description',
+            'task_id'     => $task->id
+        ];
+
+        $response = $this->postJson('/api/subtasks', $subTaskData);
+        $response->assertStatus(200);
+        $expectedCount = 2;
+        $count = SubTaskSnapshot::where('task_id', $task->id)->count();
+        $this->assertEquals($expectedCount, $count);
+
+        $response = $this->deleteJson('/api/subtasks/' . $subTaskId, []);
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('sub_task_snapshots', ['task_id' => $task->id]);
+        $count = SubTaskSnapshot::where('task_id', $task->id)->count();
+        $this->assertEquals($expectedCount, $count);
+
+        Carbon::setTestNow(Carbon::now()->addWeeks(2));
+
+        // 5. Делаем запрос на задачу с `expand=history`
+        $response = $this->getJson('/api/tasks/' . $task->id . '?expand=history');
+
+        // Проверяем ответ
+        $response->assertStatus(200);
     }
 }

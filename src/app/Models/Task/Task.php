@@ -4,8 +4,8 @@ namespace App\Models\Task;
 
 use App\Casts\CastObject\Task\TaskHistoryExpander;
 use App\Casts\Task\TaskHistoryCast;
+use App\Casts\Task\TaskStatusCast;
 use App\Constants\Task\TaskStatuses;
-use App\Constants\Task\TaskType;
 use App\Models\BaseModel;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,22 +28,9 @@ class Task extends BaseModel
     protected $casts = [
         'start_date' => 'date:Y-m-d',
         'recurrence' => 'array',
-        'history'    => TaskHistoryCast::class
+        'history'    => TaskHistoryCast::class,
+        'status'     => TaskStatusCast::class
     ];
-
-    public function getStatusAttribute()
-    {
-        // Если задача периодическая
-        if ($this->type == TaskType::TYPE_RECURRING) {
-            $currentDate = date('Y-m-d'); // Получаем текущую дату
-
-            return $this->getTaskStatusForDate($currentDate) ?: null;
-        }
-
-        $status = $this->getTaskStatusForDate();
-
-        return $status ?: TaskStatuses::TASK_IN_PROGRESS;
-    }
 
     public function taskHistory()
     {
@@ -73,6 +60,11 @@ class Task extends BaseModel
     public function author()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function snapshots()
+    {
+        return $this->hasMany(SubTaskSnapshot::class);
     }
 
 }

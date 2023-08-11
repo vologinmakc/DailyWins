@@ -2,10 +2,21 @@
 
 namespace App\Models\Task;
 
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class SubTaskStatus extends Model
+/**
+ * @property int    $sub_task_id
+ * @property int    $status
+ * @property string $date
+ */
+class SubTaskStatus extends BaseModel
 {
     use HasFactory;
+
+    protected $fillable = [
+        'sub_task_id',
+        'status',
+        'date'
+    ];
 }

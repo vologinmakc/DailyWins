@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Task;
 
+use App\Constants\Task\TaskStatuses;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Task\StoreSubTaskRequest;
 use App\Http\Requests\Task\UpdateSubTaskRequest;
 use App\Interfaces\Repository\SubTaskRepositoryInterface;
 use App\Models\Task\SubTask;
 use App\Services\Dto\Task\SubTaskDto;
+use App\Services\Dto\Task\SubTaskStatusDto;
+use App\Services\Dto\Task\UpdateSubTaskDto;
+use Illuminate\Http\Request;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -64,8 +68,32 @@ class SubTaskController extends BaseController
         }
 
         throw new AuthorizationException('Данная задача не ваша');
-
     }
+
+    public function updateStatus(Request $request, SubTask $subTask)
+    {
+        $statusDto = new SubTaskStatusDto($request->validate([
+            'status'     => 'required|in:' . implode(',', TaskStatuses::getList()),
+            'commentary' => 'nullable|string|255'
+        ]));
+
+        if ($subTask->created_by == Auth::id()) {
+            DB::beginTransaction();
+            try {
+                $this->subTaskRepository->updateStatus($subTask, $statusDto);
+                $this->subTaskRepository->createSnapshot($subTask->task);
+            } catch (\Throwable $exception) {
+                DB::rollBack();
+                throw $exception;
+            }
+            DB::commit();
+
+            return $this->response($subTask);
+        }
+
+        throw new AuthorizationException('Данная подзадача не ваша');
+    }
+
 
     public function destroy(SubTask $subTask)
     {

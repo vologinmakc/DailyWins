@@ -13,9 +13,9 @@ class TaskStatuses extends BaseConstant
     public static function getList(): array
     {
         return [
-            self::TASK_NOT_STARTED => 'Not Started',
-            self::TASK_IN_PROGRESS => 'In Progress',
-            self::TASK_COMPLETED   => 'Completed',
+            self::TASK_NOT_STARTED,
+            self::TASK_IN_PROGRESS,
+            self::TASK_COMPLETED
         ];
     }
 

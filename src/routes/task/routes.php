@@ -18,4 +18,5 @@ Route::prefix('subtasks')->middleware('auth')->group(function () {
     Route::get('/{subTask}', [SubTaskController::class, 'show']);
     Route::put('/{subTask}', [SubTaskController::class, 'update']);
     Route::delete('/{subTask}', [SubTaskController::class, 'destroy']);
+    Route::post('/{subTask}/status', [SubTaskController::class, 'updateStatus']);
 });

@@ -2,12 +2,14 @@
 
 namespace App\Repositories\Task;
 
+use App\Constants\Task\TaskType;
 use App\Interfaces\Repository\SubTaskRepositoryInterface;
 use App\Models\Task\SubTask;
 use App\Models\Task\SubTaskSnapshot;
+use App\Models\Task\SubTaskStatus;
 use App\Models\Task\Task;
-use App\Models\Task\TaskHistory;
 use App\Services\Dto\Task\SubTaskDto;
+use App\Services\Dto\Task\SubTaskStatusDto;
 use Illuminate\Support\Facades\Auth;
 
 class SubTaskRepository implements SubTaskRepositoryInterface
@@ -30,8 +32,19 @@ class SubTaskRepository implements SubTaskRepositoryInterface
         return $subTask;
     }
 
+    public function updateStatus(SubTask $subTask, SubTaskStatusDto $dto)
+    {
+        SubTaskStatus::updateOrCreate(
+            ['sub_task_id' => $subTask->id, 'date' => now()->format('Y-m-d')],
+            $dto->getAttribute()
+        );
+
+        return $subTask;
+    }
+
     public function delete(SubTask $subTask)
     {
+        // Удаляем подзадачу
         return $subTask->delete();
     }
 
@@ -42,10 +55,13 @@ class SubTaskRepository implements SubTaskRepositoryInterface
 
     public function createSnapshot(Task $task)
     {
-        $subtasks = $task->subtasks; // Получаем все подзадачи задачи
+        if ($task->type != TaskType::TYPE_RECURRING) {
+            return; // Если нет, просто вернемся из функции и не будем создавать слепок
+        }
+
         $subtasksData = [];
         /** @var SubTask $subtask */
-        foreach ($subtasks as $subtask) {
+        foreach ($task->subtasks as $subtask) {
             $subtasksData[] = [
                 'id'          => $subtask->id,
                 'name'        => $subtask->name,
@@ -54,12 +70,16 @@ class SubTaskRepository implements SubTaskRepositoryInterface
             ];
         }
 
-        // Создаем запись в таблице subtask_snapshots
+        // Удаляем существующий слепок для текущей даты, если он есть
+        SubTaskSnapshot::where('task_id', $task->id)
+            ->whereDate('snapshot_date', now()->format('Y-m-d'))
+            ->delete();
+
+        // Создаем новый слепок
         SubTaskSnapshot::create([
             'task_id'       => $task->id,
             'snapshot_date' => now(),
             'subtasks_data' => $subtasksData
         ]);
     }
-
 }

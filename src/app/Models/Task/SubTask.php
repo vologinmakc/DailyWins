@@ -3,11 +3,12 @@
 namespace App\Models\Task;
 
 
+use App\Casts\Task\SubTaskStatusCast;
 use App\Constants\Task\TaskStatuses;
 use App\Constants\Task\TaskType;
 use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property string $name
@@ -18,35 +19,32 @@ use Illuminate\Database\Eloquent\Model;
  */
 class SubTask extends BaseModel
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = ['name', 'description', 'task_id', 'created_by'];
 
     protected $appends = ['status'];
 
-    public function getStatusAttribute()
+    protected $casts = [
+        'status' => SubTaskStatusCast::class
+    ];
+
+    public function getSubTaskStatusForDate($date = null)
     {
-        // Получаем тип основной задачи
-        // Если задача периодическая
-        if ($this->task->type == TaskType::TYPE_RECURRING) {
-            $currentDate = date('Y-m-d'); // Получаем текущую дату
+        $statusRelation = $this->subTaskStatus();
 
-            return $this->getSubTaskStatusForDate($currentDate) ?: null;
-        }
-
-        // Для всех других сценариев, возвращаем статус, как прежде
-        $status = $this->getSubTaskStatusForDate();
-        return $status ? $status->status : TaskStatuses::TASK_IN_PROGRESS;
-    }
-
-    private function getSubTaskStatusForDate($date = null)
-    {
-        $query = $this->hasOne(SubTaskStatus::class);
         if ($date) {
-            $query->where('date', $date);
+            $statusRelation->where('date', $date);
         }
-        return $query->first();
+
+        return optional($statusRelation->first())->status;
     }
+
+    public function subTaskStatus()
+    {
+        return $this->hasOne(SubTaskStatus::class);
+    }
+
 
     public function task()
     {

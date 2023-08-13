@@ -3,9 +3,9 @@
 namespace App\Casts\CastObject\Task\TaskHistoryExpander;
 
 use App\Constants\Task\TaskStatuses;
+use App\Models\Task\SubTaskStatus;
 use App\Models\Task\Task;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 
 class SubTaskHandler
 {
@@ -34,7 +34,7 @@ class SubTaskHandler
      */
     public function getSubTaskStatuses($subTaskIds)
     {
-        return DB::table('sub_task_statuses')
+        return SubTaskStatus::query()
             ->whereIn('sub_task_id', $subTaskIds)
             ->get()
             ->groupBy('sub_task_id');

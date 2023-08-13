@@ -281,5 +281,15 @@ class SubTaskControllerTest extends TestCase
 
         // Проверяем ответ
         $response->assertStatus(200);
+
+        // Проверка первых трех записей history
+        for ($i = 0; $i < 3; $i++) {
+            $response->assertJsonPath("data.history.$i.subtasks.0.name", "Удаленная");
+        }
+
+        // Проверка последних двух записей history
+        for ($i = 3; $i < 5; $i++) {
+            $response->assertJsonPath("data.history.$i.subtasks.0.name", "Новая");
+        }
     }
 }

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Casts\CastObject\Task;
+namespace App\Casts\CastObject\Task\TaskHistoryExpander;
 
+use App\Casts\CastObject\Task\TaskPeriod;
 use App\Constants\Task\TaskStatuses;
 use App\Models\Task\Task;
 use App\Services\Dto\Task\TaskDto;
@@ -19,11 +20,12 @@ use Illuminate\Support\Facades\DB;
  * Методы:
  * @method 'getExpandedTasks': array Возвращает массив снимков задачи для каждой активной даты.
  */
-class TaskHistoryExpander
+class TaskHistoryExpanderHistoryVersion
 {
     public function __construct(Task $task)
     {
         $this->task = $task;
+        $this->taskHistoryHandler = new TaskHistoryHandler($task);
     }
 
     /**
@@ -36,15 +38,7 @@ class TaskHistoryExpander
     public function getExpandedTasks()
     {
         $tasks = [];
-        $periods = [];
-
-        // Создаем периоды на основе истории задачи
-        $histories = $this->task->taskHistory->sortBy('changed_at');
-        foreach ($histories as $index => $history) {
-            $startDate = $history->changed_at;
-            $endDate = isset($histories[$index + 1]) ? $histories[$index + 1]->changed_at : Carbon::now();
-            $periods[] = new TaskPeriod($startDate, $endDate, $history['recurrence']);
-        }
+        $periods = $this->taskHistoryHandler->generatePeriods();
 
         // Предварительная загрузка всех подзадач и их статусов
         $subTasksWithStatus = $this->task->subtasks()->with(['subTaskStatus'])->get()->keyBy('id');

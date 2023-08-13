@@ -2,7 +2,7 @@
 
 namespace App\Casts\Task;
 
-use App\Casts\CastObject\Task\TaskHistoryExpander;
+use App\Casts\CastObject\Task\TaskHistoryExpander\TaskHistoryExpander;
 use App\Models\Task\Task;
 
 class TaskHistoryCast

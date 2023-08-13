@@ -2,7 +2,7 @@
 
 namespace App\Models\Task;
 
-use App\Casts\CastObject\Task\TaskHistoryExpander;
+use App\Casts\CastObject\Task\TaskHistoryExpander\TaskHistoryExpander;
 use App\Casts\Task\TaskHistoryCast;
 use App\Casts\Task\TaskStatusCast;
 use App\Constants\Task\TaskStatuses;

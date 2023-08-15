@@ -41,7 +41,7 @@ services:
       - ./src:/application
     working_dir: /application
     environment:
-      PHP_IDE_CONFIG: "serverName=daylywins"
+      PHP_IDE_CONFIG: "serverName=Docker"
     depends_on:
       - dailywins_postgres
       - dailywins_redis

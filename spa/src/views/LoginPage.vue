@@ -28,6 +28,7 @@
                   <v-btn @click.prevent="redirectToRegistration" dark block>Регистрация</v-btn>
                 </v-col>
               </v-row>
+              <v-alert v-if="errorMessage" type="error">{{ errorMessage }}</v-alert>
             </v-form>
           </v-card-text>
         </v-card>
@@ -41,24 +42,32 @@ export default {
   data() {
     return {
       email: '',
-      password: ''
+      password: '',
+      errorMessage: ''
     };
   },
   methods: {
     async login() {
-      const storedUser = JSON.parse(localStorage.getItem("test_user"));
-      if (this.email === storedUser.email && this.password === storedUser.password) {
-        console.log("Authenticated successfully");
-        localStorage.setItem('user', storedUser.email); // Save user object in localStorage
-        localStorage.setItem('authToken', 'true');
-        if (this.$router.currentRoute.path !== '/') {
+      try {
+        const response = await this.$axios.post("/api/login", {
+          username: this.email,
+          password: this.password
+        });
+        if (response.data && response.data.access_token) {
+          localStorage.setItem('authToken', response.data.access_token);
+          const userResponse = await this.$axios.get("/api/user/me");
+          if (userResponse.data) {
+            localStorage.setItem('user', JSON.stringify(userResponse.data.data));
+            this.$emit('loginSuccess', userResponse.data.data.name);
+          }
           this.$router.push('/');
+        } else {
+          this.errorMessage = "Ошибка в данных пользователя";
         }
-        this.$emit("loginSuccess", storedUser.email); // Emit loginSuccess event with the user object
-      } else {
-        console.log("Authentication failed");
+      } catch (error) {
+        this.errorMessage = "Ошибка в данных пользователя";
+        console.error("Error during authentication:", error);
       }
-      console.log("Login triggered");
     },
     redirectToRegistration() {
       this.$router.push('/registration');

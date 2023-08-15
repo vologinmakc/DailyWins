@@ -10,7 +10,6 @@ use App\Interfaces\Repository\SubTaskRepositoryInterface;
 use App\Models\Task\SubTask;
 use App\Services\Dto\Task\SubTaskDto;
 use App\Services\Dto\Task\SubTaskStatusDto;
-use App\Services\Dto\Task\UpdateSubTaskDto;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;

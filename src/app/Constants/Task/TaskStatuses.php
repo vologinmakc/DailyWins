@@ -21,6 +21,6 @@ class TaskStatuses extends BaseConstant
 
     public static function getStatusName(int $status): string
     {
-        return self::getList()[$status] ?? 'Unknown';
+        return self::getList()[$status] ?? self::TASK_IN_PROGRESS;
     }
 }

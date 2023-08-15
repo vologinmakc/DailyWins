@@ -5,133 +5,74 @@
       </v-col>
       <v-col cols="12" class="center-column" style="max-width: 800px; margin: 0 auto;">
         <div class="date">
-          <v-icon v-if="areAllTasksCompleted" large color="green" class="success-icon">mdi-check-circle-outline</v-icon>
-          <span class="font-weight-light" style="font-size: 1.5em;">Сегодня  </span>
+          <v-icon v-if="areAllTasksCompleted" large color="green" class="success-icon">mdi-check-circle-outline
+          </v-icon>
+          <span class="font-weight-light" style="font-size: 1.5em;">{{ displayedDateLabel }} </span>
           <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40">
             <template v-slot:activator="{ on, attrs }">
-              <span v-bind="attrs" v-on="on" style="font-size: 2.6em; cursor: pointer;">{{ currentDate }}</span>
+              <span v-bind="attrs" v-on="on" style="font-size: 2.6em; cursor: pointer;">{{
+                  formattedSelectedDate
+                }}</span>
             </template>
-            <v-date-picker v-model="selectedDate" @input="menu = false"></v-date-picker>
+            <v-date-picker width="100%" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
           </v-menu>
 
-          <div class="days-of-week">
-            <template v-for="(day, index) in weekDays">
-              <span :key="'day-' + day" :class="{ 'current-day': day === currentDayOfWeek }">{{ day }}</span>
-              <span v-if="index !== weekDays.length - 1" :key="'separator-' + index"> | </span>
-            </template>
+          <!--   Сегодняшний день   -->
+          <div class="current-day-label">
+            <div>
+              Сегодня | <span class="current-day-label__current-day">{{ currentDayOfWeek }}</span>
+            </div>
           </div>
         </div>
         <v-col>
           <hr>
         </v-col>
+        <v-overlay :value="isLoading">
+          <v-progress-circular indeterminate size="64"></v-progress-circular>
+        </v-overlay>
         <div v-if="tasks.length === 0" style="font-size: 1.6em;">На сегодня у вас нет задач</div>
 
         <!--   Tasks      -->
-        <v-expansion-panels multiple v-if="tasks.length > 0" class="task-rounded box-shadow">
-        <v-expansion-panel v-for="task in tasks" :key="task.name">
-            <v-expansion-panel-header :class="{'task-completed': isAllSubTasksCompleted(task)}" class="task-header">
+        <!--   Выводим ежедневные задачи      -->
+        <div v-if="dailyTasks.length > 0">
+          <div class="tasks-header__type-task">
+            Ежедневные задачи
+          </div>
+          <TasksList :loadTasks="loadTasksForSelectedDate" :tasks="dailyTasks" :TASK_STATUSES="TASK_STATUSES"/>
+        </div>
 
-              <div>
-                {{ task.name }}
-                <v-progress-linear
-                    v-if="task.subTasks && task.subTasks.length"
-                    :value="calculateProgress(task.subTasks)"
-                    color="green"
-                    height="20"
-                    class="v-progress-linear__bar mt-2"
-                >
-                  {{ completedSubTasks(task.subTasks) }} / {{ task.subTasks.length }}
-                </v-progress-linear>
-              </div>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content class="custom-expansion-panel-content">
-              <ul class="subtask-list text-left">
-                <li v-for="subTask in task.subTasks" :key="subTask.name" class="subtask-item"
-                    :class="{ 'completed': subTask.status === TASK_STATUSES.TASK_COMPLETED }">
-                  <v-icon :color="getSubTaskIconColor(subTask.status)" small class="mr-2">
-                    {{ getSubTaskIcon(subTask.status) }}
-                  </v-icon>
-                  <div class="subtask-details">
-                    <div class="subtask-name">{{ subTask.name }}</div>
-                    <div class="subtask-description">{{ subTask.description }}</div>
-                  </div>
+        <!--   Остальные типы задач     -->
+        <TasksList :loadTasks="loadTasksForSelectedDate" :tasks="nonDailyTasks" :TASK_STATUSES="TASK_STATUSES"/>
+        <!--   Остальные типы задач     -->
 
-                  <!--   Иконки       -->
-                  <v-icon @click="toggleSubTaskStatus(task, subTask)" class="custom-icon-size">
-                    {{
-                      subTask.status === TASK_STATUSES.TASK_COMPLETED ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'
-                    }}
-                  </v-icon>
-                  <v-icon @click="openEditSubTaskModal(task, subTask)" class="ml-2 edit-icon custom-icon-size">mdi-pencil</v-icon>
-                  <v-icon @click="deleteSubTask(task, subTask)" class="ml-2 delete-icon custom-icon-size">mdi-trash-can-outline
-                  </v-icon>
-                  <!--   Иконки       -->
-                </li>
-              </ul>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-        </v-expansion-panels>
+        <!-- Добавление задачи   -->
         <div class="text-right mt-4">
-          <v-btn @click="showModal = true" color="green" dark small>Добавить задачу</v-btn>
+          <AddTaskButton :selectedDate="selectedDate" :loadTasks="loadTasksForSelectedDate" />
         </div>
       </v-col>
       <v-col cols="4" class="right-column">
-
       </v-col>
     </v-row>
-    <!-- Modal Start -->
-    <v-dialog v-model="showModal" persistent max-width="600px">
-      <v-card>
-        <v-card-title>
-          <span class="text-h5">Добавить задачу</span>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field v-model="newTaskName" label="Имя задачи" outlined></v-text-field>
-          <div v-if="showSubTasks">
-            <div v-for="(subTask, index) in subTasks" :key="index">
-              <v-text-field v-model="subTask.name" label="Имя подзадачи" outlined></v-text-field>
-              <v-text-field v-model="subTask.description" label="Описание подзадачи" outlined></v-text-field>
-            </div>
-          </div>
-          <v-btn @click="toggleSubTasks" color="green" dark small>
-            {{ showSubTasks ? 'Скрыть подзадачи' : 'Добавить подзадачу' }}
-          </v-btn>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="black darken-1" text @click="addTask">Добавить</v-btn>
-          <v-btn color="black darken-1" text @click="showModal = false">Отмена</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-if="editingSubTask" v-model="showEditModal" persistent max-width="600px">
-      <v-card>
-        <v-card-title>
-          <span class="text-h5">Редактировать подзадачу</span>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field v-model="editingSubTask.name" label="Имя подзадачи" outlined></v-text-field>
-          <v-text-field v-model="editingSubTask.description" label="Описание подзадачи" outlined></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="green darken-1" text @click="updateSubTask">Обновить</v-btn>
-          <v-btn color="red darken-1" text @click="showEditModal = false">Отмена</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Modal End -->
   </v-container>
 </template>
 
 <script>
+import TasksList from './tasks/TasksList.vue';
+import AddTaskButton from './tasks/AddTaskButton.vue';
+
 export default {
   name: 'HomePage',
+  components: {
+    TasksList,
+    AddTaskButton
+  },
   data() {
     return {
+      isLoading: false,
       menu: false,
       selectedDate: new Date().toISOString().substr(0, 10),
-      tasks: JSON.parse(localStorage.getItem('userTasks') || '[]'),
-      newTaskName: '',
+      startDate: new Date().toISOString().substr(0, 10),
+      tasks: [],
       subTasks: [{name: '', description: ''}],
       showModal: false,
       showSubTasks: false,
@@ -144,48 +85,87 @@ export default {
         'Saturday': 'Суббота',
         'Sunday': 'Воскресенье'
       },
-      weekDays: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
+      weekDays: [
+        {name: 'Понедельник', isCurrent: false, isNeighbor: false},
+        {name: 'Вторник', isCurrent: false, isNeighbor: false},
+        {name: 'Среда', isCurrent: false, isNeighbor: false},
+        {name: 'Четверг', isCurrent: false, isNeighbor: false},
+        {name: 'Пятница', isCurrent: false, isNeighbor: false},
+        {name: 'Суббота', isCurrent: false, isNeighbor: false},
+        {name: 'Воскресенье', isCurrent: false, isNeighbor: false},
+      ],
       showEditModal: false,
       editingSubTask: {name: '', description: ''},
-      editingTask: null
+      taskTypes: [
+        {text: 'На сегодня', value: 1},
+        {text: 'Повторяющееся', value: 2}
+      ],
+      selectedTaskType: 1 // пока так
     };
   },
+  mounted() {
+    this.loadTasksForSelectedDate();
+    this.weekDays[this.currentDayOfWeekIndex()].isCurrent = true;
+    if (this.currentDayOfWeekIndex() > 0) {
+      this.weekDays[this.currentDayOfWeekIndex() - 1].isNeighbor = true;
+    }
+    if (this.currentDayOfWeekIndex() < this.weekDays.length - 1) {
+      this.weekDays[this.currentDayOfWeekIndex() + 1].isNeighbor = true;
+    }
+  },
   computed: {
+    formattedSelectedDate() {
+      const dateObj = new Date(this.selectedDate);
+      return dateObj.toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    },
     areAllTasksCompleted() {
-      return this.tasks.every(task => task.subTasks.every(subTask => subTask.status === this.TASK_STATUSES.TASK_COMPLETED));
+      if (this.tasks.length === 0) {
+        return false;
+      }
+
+      return this.tasks.every(task => task.sub_tasks.every(subTask => subTask.status === this.TASK_STATUSES.TASK_COMPLETED));
     },
     isUserAuthenticated() {
       return !!localStorage.getItem('authToken');
     },
-    userName() {
-      return localStorage.getItem('user') || 'Войти';
-    },
-    currentDate() {
-      return new Date().toLocaleDateString();
-    },
-    dateColor() {
-      if (this.tasks.length === 0) {
-        return 'gray';
+    displayedDateLabel() {
+      const today = new Date().toISOString().substr(0, 10);
+      if (this.selectedDate === today) {
+        return "Сегодня";
       }
-      const uncompletedTasks = this.tasks.filter(task => task.status === 1);
-      if (uncompletedTasks.length > 0) {
-        return 'red';
-      }
-      return 'green';
+      const dayNameEnglish = new Date(this.selectedDate).toLocaleString('en-US', {weekday: 'long'});
+      return this.daysMapping[dayNameEnglish];
     },
     currentDayOfWeek() {
-      const dayNameEnglish = new Date().toLocaleString('en-US', {weekday: 'long'});
-      return this.daysMapping[dayNameEnglish];
+      return new Date().toLocaleString('ru-RU', {weekday: 'long'});
+    },
+    dailyTasks() {
+      return this.tasks.filter(task => task.type === 1);
+    },
+    nonDailyTasks() {
+      return this.tasks.filter(task => task.type !== 1);
     }
-
   },
   methods: {
-    calculateProgress(subTasks) {
-      const completedTasks = subTasks.filter(task => task.status === this.TASK_STATUSES.TASK_COMPLETED).length;
-      return (completedTasks / subTasks.length) * 100;  // Процент выполнения
+    // Загрузим задачи пользователя (пока все потом сделаем по дате)
+    async loadTasksForSelectedDate() {
+      try {
+        this.isLoading = true;
+        const response = await this.$axios.get('/api/tasks?search[start_date_or_day]=' + this.selectedDate + '&&expand=sub_tasks');
+        this.tasks = response.data.data;
+      } catch (error) {
+        console.error('Ошибка при получении задач:', error);
+      } finally {
+        this.isLoading = false;
+      }
     },
-    completedSubTasks(subTasks) {
-      return subTasks.filter(task => task.status === this.TASK_STATUSES.TASK_COMPLETED).length;
+    openEditTaskModal(task) {
+      this.editingTask = {...task}; // Клонировать задачу, чтобы предотвратить неожиданное поведение
+      this.showEditTaskModal = true;
     },
     getSubTaskIcon(status) {
       switch (status) {
@@ -199,7 +179,7 @@ export default {
       }
     },
     isAllSubTasksCompleted(task) {
-      return task.subTasks.every(subTask => subTask.status === this.TASK_STATUSES.TASK_COMPLETED);
+      return task.sub_tasks.every(sub_task => sub_task.status === this.TASK_STATUSES.TASK_COMPLETED);
     },
     getSubTaskIconColor(status) {
       switch (status) {
@@ -212,77 +192,18 @@ export default {
           return '';
       }
     },
-    toggleSubTaskStatus(mainTask, subTask) {
-      if (subTask.status === this.TASK_STATUSES.TASK_COMPLETED) {
-        subTask.status = this.TASK_STATUSES.TASK_NOT_STARTED;
-      } else {
-        subTask.status = this.TASK_STATUSES.TASK_COMPLETED;
-      }
-
-      if (this.isAllSubTasksCompleted(mainTask)) {
-        mainTask.status = this.TASK_STATUSES.TASK_COMPLETED;
-      } else {
-        mainTask.status = this.TASK_STATUSES.TASK_NOT_STARTED;
-      }
-    },
-    openEditSubTaskModal(task, subTask) {
-      this.editingTask = task;
-      this.editingSubTask = {...subTask}; // Делаем копию объекта
-      this.showEditModal = true;
-    },
-    async updateSubTask() {
-      try {
-        const response = await this.$axios.put(`/v1/sub-task/${this.editingSubTask.id}`, this.editingSubTask);
-        if (response.data.success) {
-          const index = this.editingTask.subTasks.findIndex(subTask => subTask.id === this.editingSubTask.id);
-          this.editingTask.subTasks.splice(index, 1, this.editingSubTask);
-          this.showEditModal = false;
-        } else {
-          console.error('Error updating the subtask:', response.data.message);
-        }
-      } catch (error) {
-        console.error('Failed to update the subtask:', error);
-      }
-    },
-    deleteSubTask(mainTask, subTaskToDelete) {
-      const index = mainTask.subTasks.indexOf(subTaskToDelete);
-      if (index > -1) {
-        mainTask.subTasks.splice(index, 1);
-      }
-      // Здесь вы можете также обновить данные в localStorage или на сервере
-    },
     logout() {
       localStorage.removeItem('authToken');
       this.$router.push('/login');
     },
-    toggleSubTasks() {
-      this.showSubTasks = !this.showSubTasks;
-      if (!this.showSubTasks) {
-        this.subTasks = [{name: '', description: ''}];
-      }
+    currentDayOfWeekIndex() {
+      const dayNameEnglish = new Date().toLocaleString('en-US', {weekday: 'long'});
+      const currentDay = this.daysMapping[dayNameEnglish];
+      return this.weekDays.findIndex(day => day.name === currentDay);
     },
-    addSubTask() {
-      this.subTasks.push({name: '', description: ''});
-    },
-    async addTask() {
-      if (this.newTaskName.trim() !== '') {
-        const taskData = {
-          name: this.newTaskName,
-          subTasks: this.subTasks.filter(st => st.name.trim() !== '')
-        };
-
-        try {
-          const response = await this.$axios.post('/v1/tasks', taskData);
-          if (response.data.success) {
-            // You can add more actions on successful post
-            this.showModal = false;
-          } else {
-            console.error('Error adding the task:', response.data.message);
-          }
-        } catch (error) {
-          console.error('Failed to add the task:', error);
-        }
-      }
+    onDateSelected() {
+      this.menu = false;
+      this.loadTasksForSelectedDate();
     }
   }
 }
@@ -296,72 +217,15 @@ export default {
   margin-bottom: 20px;
 }
 
-.subtask-list {
-  list-style-type: none;
-  padding: 0;
-}
-
-.subtask-item {
-  margin-bottom: 10px;
-}
-
-.subtask-name {
-  font-weight: bold;
-}
-
-.subtask-description {
-  color: gray;
-  font-size: 0.9em;
-}
-
-.task-header {
-  font-size: 16px;
-  font-weight: bold;
+.tasks-header__type-task {
   text-align: left;
-  background-color: #f1f1f1;
-}
-
-.custom-expansion-panel-content {
-  padding: 16px;
-}
-
-.subtask-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.subtask-name, .subtask-description {
-  flex: 1;
-}
-
-.delete-icon {
-  color: red;
+  font-weight: bold;
+  margin: 10px 10px;
 }
 
 .subtask-item.completed .subtask-name,
 .subtask-item.completed .subtask-description {
   color: green;
-}
-
-.v-progress-linear__bar {
-  border-radius: 10px;
-}
-
-.subtask-details {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.task-completed {
-  background-color: #4caf50 !important;
-  color: white;
-}
-
-.task-rounded {
-  border-radius: 20px;
-  overflow: hidden;
 }
 
 .success-icon {
@@ -370,27 +234,18 @@ export default {
   margin-top: -20px;
 }
 
-.current-day {
+.task-header .v-icon {
+  transform: none !important;
+}
+
+.current-day-label {
+  font-size: 1em;
+  margin-top: 20px;
+  text-align: right;
+}
+
+.current-day-label__current-day {
+  font-size: 1.5em;
   font-weight: bold;
-  color: #5492e3;
-  margin: 0 2px;
-}
-
-.days-of-week {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
-.days-of-week > span {
-  margin: 0 5px;
-}
-.v-icon.custom-icon-size  {
-  font-size: 24px;
-  color: #5492e3;
-}
-.box-shadow {
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 </style>

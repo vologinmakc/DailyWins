@@ -16,6 +16,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -26,6 +27,7 @@ class SubTaskControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Artisan::call('passport:install');
         $this->user = $user = User::factory()->create([
             'name'              => 'admin',
             'email'             => 'admin@admin.com',
@@ -33,8 +35,14 @@ class SubTaskControllerTest extends TestCase
             'password'          => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'remember_token'    => Str::random(10),
         ]);
-        $this->actingAs($user);
+        $this->accessToken = $this->user->createToken('test-token')->accessToken;
 
+    }
+
+    public function withHeaders(array $headers)
+    {
+        $headers['Authorization'] = 'Bearer ' . $this->accessToken;
+        return parent::withHeaders($headers);
     }
 
     public function testCreateSubTask()
@@ -49,7 +57,7 @@ class SubTaskControllerTest extends TestCase
             'task_id'     => $task->id
         ];
 
-        $response = $this->postJson('/api/subtasks', $subTaskData);
+        $response = $this->withHeaders([])->postJson('/api/subtasks', $subTaskData);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -83,7 +91,7 @@ class SubTaskControllerTest extends TestCase
             'task_id'    => $task->id
         ]);
 
-        $response = $this->getJson('/api/subtasks/' . $subTask->id);
+        $response = $this->withHeaders([])->getJson('/api/subtasks/' . $subTask->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.name', $subTask->name);
@@ -104,7 +112,7 @@ class SubTaskControllerTest extends TestCase
 
         $updatedData = ['name' => 'Updated Name'];
 
-        $response = $this->putJson('/api/subtasks/' . $subTask->id, $updatedData);
+        $response = $this->withHeaders([])->putJson('/api/subtasks/' . $subTask->id, $updatedData);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('sub_tasks', array_merge(['id' => $subTask->id], $updatedData));
@@ -128,7 +136,7 @@ class SubTaskControllerTest extends TestCase
             'status'      => TaskStatuses::TASK_COMPLETED
         ]);
 
-        $response = $this->deleteJson('/api/subtasks/' . $subTask->id);
+        $response = $this->withHeaders([])->deleteJson('/api/subtasks/' . $subTask->id);
         $response->assertStatus(200);
 
         // Проверка на наличие мягко удаленной записи в базе данных
@@ -155,7 +163,7 @@ class SubTaskControllerTest extends TestCase
             'task_id'    => $task->id
         ]);
 
-        $response = $this->deleteJson('/api/tasks/' . $task->id);
+        $response = $this->withHeaders([])->deleteJson('/api/tasks/' . $task->id);
         $response->assertStatus(200);
 
         // Проверка на отсутствие основной задачи в базе данных
@@ -183,17 +191,23 @@ class SubTaskControllerTest extends TestCase
         $anotherUser = User::factory()->create();
 
         // Пытаемся получить доступ к подзадаче первого пользователя от имени второго пользователя
-        $this->actingAs($anotherUser);
+        $accessToken = $anotherUser->createToken('test-token')->accessToken;
 
-        $response = $this->getJson('/api/subtasks/' . $subTask->id);
+        $response = $this->getJson('/api/subtasks/' . $subTask->id, [
+            'Authorization' => 'Bearer ' . $accessToken
+        ]);
         $response->assertJsonPath('result_code', ResponseStatuses::ERROR);
 
         // Пытаемся обновить подзадачу первого пользователя от имени второго пользователя
-        $response = $this->putJson('/api/subtasks/' . $subTask->id, ['name' => 'New Name']);
+        $response = $this->putJson('/api/subtasks/' . $subTask->id, ['name' => 'New Name'], [
+            'Authorization' => 'Bearer ' . $accessToken
+        ]);
         $response->assertJsonPath('result_code', ResponseStatuses::ERROR);
 
         // Пытаемся удалить подзадачу первого пользователя от имени второго пользователя
-        $response = $this->deleteJson('/api/subtasks/' . $subTask->id);
+        $response = $this->deleteJson('/api/subtasks/' . $subTask->id, [], [
+            'Authorization' => 'Bearer ' . $accessToken
+        ]);
         $response->assertJsonPath('result_code', ResponseStatuses::ERROR);
     }
 
@@ -211,7 +225,7 @@ class SubTaskControllerTest extends TestCase
 
         $newStatus = TaskStatuses::TASK_COMPLETED;
 
-        $response = $this->postJson('/api/subtasks/' . $subTask->id . '/status', ['status' => $newStatus]);
+        $response = $this->withHeaders([])->putJson('/api/subtasks/' . $subTask->id . '/status', ['status' => $newStatus]);
 
         $response->assertStatus(200);
 
@@ -240,7 +254,7 @@ class SubTaskControllerTest extends TestCase
             'task_id'     => $task->id
         ];
 
-        $response = $this->postJson('/api/subtasks', $subTaskData);
+        $response = $this->withHeaders([])->postJson('/api/subtasks', $subTaskData);
         $response->assertStatus(200);
         $subTaskId = $response->json()['data']['id'];
 
@@ -261,13 +275,13 @@ class SubTaskControllerTest extends TestCase
             'task_id'     => $task->id
         ];
 
-        $response = $this->postJson('/api/subtasks', $subTaskData);
+        $response = $this->withHeaders([])->postJson('/api/subtasks', $subTaskData);
         $response->assertStatus(200);
         $expectedCount = 2;
         $count = SubTaskSnapshot::where('task_id', $task->id)->count();
         $this->assertEquals($expectedCount, $count);
 
-        $response = $this->deleteJson('/api/subtasks/' . $subTaskId, []);
+        $response = $this->withHeaders([])->deleteJson('/api/subtasks/' . $subTaskId, []);
         $response->assertStatus(200);
         $this->assertDatabaseHas('sub_task_snapshots', ['task_id' => $task->id]);
         $count = SubTaskSnapshot::where('task_id', $task->id)->count();
@@ -276,7 +290,7 @@ class SubTaskControllerTest extends TestCase
         Carbon::setTestNow(Carbon::now()->addWeeks(2));
 
         // 5. Делаем запрос на задачу с `expand=history`
-        $response = $this->getJson('/api/tasks/' . $task->id . '?expand=history');
+        $response = $this->withHeaders([])->getJson('/api/tasks/' . $task->id . '?expand=history');
 
         // Проверяем ответ
         $response->assertStatus(200);

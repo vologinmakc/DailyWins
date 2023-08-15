@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -24,6 +25,7 @@ class TaskControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Artisan::call('passport:install');
         $this->user = $user = User::factory()->create([
             'name'              => 'admin',
             'email'             => 'admin@admin.com',
@@ -31,8 +33,14 @@ class TaskControllerTest extends TestCase
             'password'          => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'remember_token'    => Str::random(10),
         ]);
-        $this->actingAs($user);
+        $this->accessToken = $this->user->createToken('test-token')->accessToken;
 
+    }
+
+    public function withHeaders(array $headers)
+    {
+        $headers['Authorization'] = 'Bearer ' . $this->accessToken;
+        return parent::withHeaders($headers);
     }
 
     public function testCreateOneOffTask()
@@ -54,7 +62,7 @@ class TaskControllerTest extends TestCase
             ]
         ];
 
-        $response = $this->postJson('/api/tasks', $payload);
+        $response = $this->withHeaders([])->postJson('/api/tasks', $payload);
 
         $response->assertStatus(200)
             ->assertJsonPath('result_code', ResponseStatuses::COMPLETE)
@@ -90,7 +98,7 @@ class TaskControllerTest extends TestCase
             ]
         ];
 
-        $response = $this->postJson('/api/tasks', $payload);
+        $response = $this->withHeaders([])->postJson('/api/tasks', $payload);
 
         $response->assertStatus(200)
             ->assertJsonPath('result_code', ResponseStatuses::COMPLETE)
@@ -124,7 +132,7 @@ class TaskControllerTest extends TestCase
             'description' => 'Обновленное описание'
         ];
 
-        $response = $this->putJson('/api/tasks/' . $task->id, $payload);
+        $response = $this->withHeaders([])->putJson('/api/tasks/' . $task->id, $payload);
 
         $response->assertStatus(200)
             ->assertJsonPath('result_code', ResponseStatuses::COMPLETE)
@@ -150,7 +158,7 @@ class TaskControllerTest extends TestCase
             'recurrence' => [WeekDays::MONDAY, WeekDays::WEDNESDAY]
         ];
 
-        $response = $this->putJson('/api/tasks/' . $task->id, $payload);
+        $response = $this->withHeaders([])->putJson('/api/tasks/' . $task->id, $payload);
 
         $response->assertStatus(200)
             ->assertJsonPath('result_code', ResponseStatuses::COMPLETE)
@@ -172,7 +180,7 @@ class TaskControllerTest extends TestCase
 
         $payload = ['recurrence' => [WeekDays::TUESDAY, WeekDays::THURSDAY]];
 
-        $response = $this->putJson('/api/tasks/' . $task->id, $payload);
+        $response = $this->withHeaders([])->putJson('/api/tasks/' . $task->id, $payload);
 
         $response->assertStatus(200)
             ->assertJsonPath('result_code', ResponseStatuses::COMPLETE)
@@ -196,7 +204,7 @@ class TaskControllerTest extends TestCase
             'created_by' => $this->user->id
         ]);
 
-        $response = $this->deleteJson('/api/tasks/' . $task->id);
+        $response = $this->withHeaders([])->deleteJson('/api/tasks/' . $task->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('result_code', ResponseStatuses::COMPLETE);
@@ -214,7 +222,7 @@ class TaskControllerTest extends TestCase
             'type'       => TaskType::TYPE_ONE_OFF
         ]);
 
-        $response = $this->getJson('/api/tasks?search[start_date_or_day]=' . $today);
+        $response = $this->withHeaders([])->getJson('/api/tasks?search[start_date_or_day]=' . $today);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
@@ -231,7 +239,7 @@ class TaskControllerTest extends TestCase
             'type'       => TaskType::TYPE_ONE_OFF
         ]);
 
-        $response = $this->getJson('/api/tasks?search[start_date_or_day]=' . $specificDate);
+        $response = $this->withHeaders([])->getJson('/api/tasks?search[start_date_or_day]=' . $specificDate);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
@@ -249,13 +257,13 @@ class TaskControllerTest extends TestCase
         $task2 = Task::factory()->create(['recurrence' => [$currentDayOfWeek], 'created_by' => $this->user->id]);
 
         // Фильтр по текущей дате
-        $response = $this->getJson('/api/tasks?search[start_date_or_day]=' . $today);
+        $response = $this->withHeaders([])->getJson('/api/tasks?search[start_date_or_day]=' . $today);
         $response->assertStatus(200);
         $this->assertContains($task1->id, $response->json('data.*.id'));
         $this->assertContains($task2->id, $response->json('data.*.id'));
 
         // Фильтр по текущему дню недели
-        $response = $this->getJson('/api/tasks?search[start_date_or_day]=' . $currentDayOfWeek);
+        $response = $this->withHeaders([])->getJson('/api/tasks?search[start_date_or_day]=' . $currentDayOfWeek);
         $response->assertStatus(200);
         $this->assertContains($task2->id, $response->json('data.*.id'));
         $this->assertNotContains($task1->id, $response->json('data.*.id'));
@@ -268,13 +276,13 @@ class TaskControllerTest extends TestCase
         $recurringTask = Task::factory()->create(['type' => TaskType::TYPE_RECURRING, 'created_by' => $this->user->id]);
 
         // Фильтр по типу одноразовой задачи
-        $response = $this->getJson('/api/tasks?search[type]=' . TaskType::TYPE_ONE_OFF);
+        $response = $this->withHeaders([])->getJson('/api/tasks?search[type]=' . TaskType::TYPE_ONE_OFF);
         $response->assertStatus(200);
         $this->assertContains($oneOffTask->id, $response->json('data.*.id'));
         $this->assertNotContains($recurringTask->id, $response->json('data.*.id'));
 
         // Фильтр по типу регулярной задачи
-        $response = $this->getJson('/api/tasks?search[type]=' . TaskType::TYPE_RECURRING);
+        $response = $this->withHeaders([])->getJson('/api/tasks?search[type]=' . TaskType::TYPE_RECURRING);
         $response->assertStatus(200);
         $this->assertContains($recurringTask->id, $response->json('data.*.id'));
         $this->assertNotContains($oneOffTask->id, $response->json('data.*.id'));
@@ -290,7 +298,7 @@ class TaskControllerTest extends TestCase
         $task = Task::factory()->create(['recurrence' => [$dayOfWeekForDifferentDate], 'created_by' => $this->user->id]);
 
         // Фильтр по дню недели отличной даты
-        $response = $this->getJson('/api/tasks?search[start_date_or_day]=' . $differentDate);
+        $response = $this->withHeaders([])->getJson('/api/tasks?search[start_date_or_day]=' . $differentDate);
         $response->assertStatus(200);
         $this->assertContains($task->id, $response->json('data.*.id'));
     }
@@ -308,7 +316,7 @@ class TaskControllerTest extends TestCase
         ]);
 
         // Получаем эту задачу для текущего дня
-        $response = $this->getJson('/api/tasks/' . $task->id);
+        $response = $this->withHeaders([])->getJson('/api/tasks/' . $task->id);
 
         // Проверяем, что задача доступна и ее статус на текущий день совпадает с ожидаемым
         $response->assertStatus(200)
@@ -337,7 +345,7 @@ class TaskControllerTest extends TestCase
         ]);
 
         // Получаем эту задачу для текущего дня
-        $response = $this->getJson('/api/tasks/' . $task->id);
+        $response = $this->withHeaders([])->getJson('/api/tasks/' . $task->id);
 
         // Проверяем, что задача доступна и ее статус на текущий день совпадает с ожидаемым
         $response->assertStatus(200)
@@ -360,7 +368,7 @@ class TaskControllerTest extends TestCase
 
         // Получаем эту задачу для выбранного дня
         $specificDate = Carbon::now()->next($specificDayOfWeek)->format('Y-m-d');
-        $response = $this->getJson('/api/tasks/' . $task->id . '?date=' . $specificDate);
+        $response = $this->withHeaders([])->getJson('/api/tasks/' . $task->id . '?date=' . $specificDate);
 
         // Проверяем, что задача доступна и ее статус на выбранную дату совпадает с ожидаемым
         $response->assertStatus(200)
@@ -388,7 +396,7 @@ class TaskControllerTest extends TestCase
 
         // Обновляем задачу для следующих 4 недель
         $updatedRecurrence = [WeekDays::WEDNESDAY, WeekDays::THURSDAY];
-        $this->putJson('/api/tasks/' . $task->id, ['recurrence' => $updatedRecurrence]);
+        $this->withHeaders([])->putJson('/api/tasks/' . $task->id, ['recurrence' => $updatedRecurrence]);
 
         // Мимикрируем прохождение 4 недель
         Carbon::setTestNow(Carbon::now()->addWeeks(4));
@@ -401,7 +409,7 @@ class TaskControllerTest extends TestCase
         ]);
 
         // Получаем историю задачи
-        $response = $this->getJson('/api/tasks/' . $task->id . '?expand=history');
+        $response = $this->withHeaders([])->getJson('/api/tasks/' . $task->id . '?expand=history');
 
         // Проверяем ответ
         $response->assertStatus(200)

@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('user')->middleware('auth')->group(function () {
+/* Auth*/
+
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::get('/me', [UserController::class, 'me']);
 });

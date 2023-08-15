@@ -5,5 +5,11 @@ export const globalMixins = {
         return {
             TASK_STATUSES
         };
+    },
+    computed: {
+        currentUser() {
+            return JSON.parse(localStorage.getItem('user'));
+        }
     }
 };
+

@@ -13,7 +13,7 @@
               <span>{{ userName }}</span>
             </v-btn>
           </template>
-          <v-list-item @click="logout">
+          <v-list-item @click="logout" style="background-color: #fff">
             <v-list-item-title>Выход</v-list-item-title>
           </v-list-item>
         </v-menu>
@@ -43,8 +43,8 @@ export default {
     }
   },
   created() {
-    this.user.name = localStorage.getItem('user') || { name: '' };
-    this.user.authToken = localStorage.getItem('authToken') === 'true';
+    this.user.name = JSON.parse(localStorage.getItem('user')).name || '';
+    this.user.authToken = !!localStorage.getItem('authToken');
   },
   methods: {
     navigateToLogin() {
@@ -52,8 +52,8 @@ export default {
         this.$router.push('/login');
       }
     },
-    loginSuccess(user) {
-      this.user.name = user;
+    loginSuccess(name) {
+      this.user.name = name;
       this.user.authToken = true;
     },
     logout() {

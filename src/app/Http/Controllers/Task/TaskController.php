@@ -10,7 +10,6 @@ use App\Models\Task\Task;
 use App\Rules\RuleApplier;
 use App\Services\Dto\Task\TaskDto;
 use App\Services\Task\Handler\TaskHandlerFactory;
-use App\Services\Task\TaskService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +17,10 @@ use Illuminate\Support\Facades\DB;
 
 class TaskController extends BaseController
 {
-    private TaskService        $taskService;
     private TaskHandlerFactory $handlerFactory;
 
-    public function __construct(TaskService $taskService, TaskHandlerFactory $handlerFactory)
+    public function __construct(TaskHandlerFactory $handlerFactory)
     {
-        $this->taskService = $taskService;
         $this->handlerFactory = $handlerFactory;
     }
 
@@ -31,8 +28,11 @@ class TaskController extends BaseController
     {
         // TODO сделать отдельно потом
         Task::setExpandField([
-            'user' => function (Task $task) {
+            'user'      => function (Task $task) {
                 return $task->author;
+            },
+            'sub_tasks' => function (Task $task) {
+                return $task->subtasks;
             }
         ]);
         $query = $ruleApplier->applyRules(Task::query());
@@ -62,7 +62,7 @@ class TaskController extends BaseController
     public function show(Task $task)
     {
         Task::setExpandField([
-            'history' => fn (Task $task) => $task->history->getExpandedTasks()
+            'history' => fn(Task $task) => $task->history->getExpandedTasks()
         ]);
 
         if ($task->created_by == Auth::id()) {

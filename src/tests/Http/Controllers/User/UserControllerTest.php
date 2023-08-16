@@ -4,6 +4,7 @@ namespace Tests\Http\Controllers\User;
 
 
 use App\Constants\Response\ResponseStatuses;
+use App\Models\Captcha\Captcha;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -55,5 +56,51 @@ class UserControllerTest extends TestCase
 
         $response->assertStatus(500);
         $response->assertJsonPath('result_code', ResponseStatuses::ERROR);
+    }
+
+    public function testUserCanRegisterWithValidCaptcha()
+    {
+        // Получаем капчу
+        $response = $this->get('/api/captcha/generate');
+        $captchaData = $response->json();
+
+        // Подготавливаем данные для регистрации
+        $registerData = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'captcha_token' => $captchaData['data']['token'],
+            'captcha' => Captcha::first()->value // Здесь должно быть значение капчи, которое вы ожидаете
+        ];
+
+        // Пытаемся зарегистрироваться
+        $response = $this->post('/api/user/register', $registerData);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
+    }
+
+    public function testUserCannotRegisterWithInvalidCaptcha()
+    {
+        // Получаем капчу
+        $response = $this->get('/api/captcha/generate');
+        $captchaData = $response->json();
+
+        // Подготавливаем данные для регистрации с неправильным значением капчи
+        $registerData = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'captcha_token' => $captchaData['data']['token'],
+            'captcha_value' => 'WRONG_VALUE' // Неправильное значение капчи
+        ];
+
+        // Пытаемся зарегистрироваться
+        $response = $this->post('/api/user/register', $registerData);
+
+        $response->assertStatus(500);
+        $this->assertDatabaseMissing('users', ['email' => 'john@example.com']);
     }
 }

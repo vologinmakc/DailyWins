@@ -34,6 +34,7 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'))
                 ->group(base_path('routes/task/routes.php'))
+                ->group(base_path('routes/captcha/routes.php'))
                 ->group(base_path('routes/user/routes.php'));
 
             // Регистрация роутов из файла web.php

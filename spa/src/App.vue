@@ -20,10 +20,14 @@
       </v-toolbar>
       <router-view @loginSuccess="loginSuccess"></router-view>
     </div>
+    <v-snackbar v-model="snackbar.visible" :color="snackbar.color" bottom>
+      {{ snackbar.message }}
+    </v-snackbar>
   </v-app>
 </template>
 
 <script>
+import { EventBus } from '@/event-bus.js';
 export default {
   name: 'App',
   data() {
@@ -31,6 +35,11 @@ export default {
       user: {
         name: '',
         authToken: false
+      },
+      snackbar: {
+        visible: false,
+        message: '',
+        color: 'success'
       }
     };
   },
@@ -43,8 +52,15 @@ export default {
     }
   },
   created() {
-    this.user.name = JSON.parse(localStorage.getItem('user')).name || '';
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    this.user.name = storedUser ? storedUser.name : '';
     this.user.authToken = !!localStorage.getItem('authToken');
+    EventBus.$on('displaySnackbar', (message, color) => {
+      this.displaySnackbar(message, color);
+    });
+  },
+  mounted() {
+    console.log("Метод displaySnackbar из mounted:", this.displaySnackbar);
   },
   methods: {
     navigateToLogin() {
@@ -62,6 +78,11 @@ export default {
       this.user.name = '';
       this.user.authToken = false;
       this.$router.push('/login');
+    },
+    displaySnackbar(message, color = 'success') {
+      this.snackbar.message = message;
+      this.snackbar.color = color;
+      this.snackbar.visible = true;
     }
   }
 };

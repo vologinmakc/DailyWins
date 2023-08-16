@@ -4,13 +4,26 @@ FROM php:8.1-fpm
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     unzip \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     && docker-php-ext-install pdo pdo_pgsql
+
+# Настройка и установка расширения GD
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
 
 # Установка PHP zip extension
 RUN apt-get install -y \
         libzip-dev \
         zip \
   && docker-php-ext-install zip
+
+# Установка Git (Нужна для некоторых пакетов)
+RUN apt-get update && apt-get install -y git
+
+# Понадобилось для локализации laravel
+RUN docker-php-ext-install bcmath
 
 # Установка xDebug и его конфигурация
 RUN pecl install xdebug

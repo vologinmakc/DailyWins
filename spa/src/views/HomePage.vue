@@ -14,7 +14,7 @@
                   formattedSelectedDate
                 }}</span>
             </template>
-            <v-date-picker width="100%" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
+            <v-date-picker width="350px" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
           </v-menu>
 
           <!--   Сегодняшний день   -->
@@ -30,7 +30,7 @@
         <v-overlay :value="isLoading">
           <v-progress-circular indeterminate size="64"></v-progress-circular>
         </v-overlay>
-        <div v-if="tasks.length === 0" style="font-size: 1.6em;">На сегодня у вас нет задач</div>
+        <div v-if="tasks.length === 0" style="font-size: 1.6em;">На сегодня у вас нет задач</div><!--   Сегодняшний день   -->
 
         <!--   Tasks      -->
         <!--   Выводим ежедневные задачи      -->
@@ -209,6 +209,7 @@ export default {
 }
 </script>
 <style scoped>
+
 .home {
   padding: 20px;
 }

@@ -9,22 +9,39 @@
           <v-card-text>
             <v-form @submit.prevent="register">
               <v-text-field
-                label="Имя"
-                v-model="name"
-                required
+                  label="Имя"
+                  v-model="name"
+                  required
               ></v-text-field>
               <v-text-field
-                label="Email"
-                v-model="email"
-                type="email"
-                required
+                  label="Email"
+                  v-model="email"
+                  type="email"
+                  required
               ></v-text-field>
               <v-text-field
-                label="Пароль"
-                v-model="password"
-                type="password"
-                required
+                  label="Пароль"
+                  v-model="password"
+                  type="password"
+                  required
               ></v-text-field>
+              <v-text-field
+                  label="Подтвердите пароль"
+                  v-model="passwordConfirmation"
+                  type="password"
+                  required
+              ></v-text-field>
+              <!-- Блок с капчей -->
+              <div>
+                <img :src="captchaSrc" @click="refreshCaptcha" style="cursor:pointer;">
+                <v-text-field
+                    label="Введите капчу"
+                    v-model="captcha"
+                    required
+                ></v-text-field>
+              </div>
+              <input type="hidden" v-model="captchaToken">
+              <!-- Конец блока с капчей -->
               <v-row>
                 <v-col>
                   <v-btn type="submit" dark block>Регистрация</v-btn>
@@ -44,14 +61,58 @@ export default {
     return {
       name: '',
       email: '',
-      password: ''
+      password: '',
+      passwordConfirmation: '',
+      captchaSrc: '',
+      captchaToken: '',
+      captcha: ''
     };
   },
+  mounted() {
+    this.refreshCaptcha();
+  },
   methods: {
+    async refreshCaptcha() {
+      try {
+        const response = await this.$axios.get('/api/captcha/generate');
+        this.captchaSrc = response.data.data.image;
+        this.captchaToken = response.data.data.token;
+      } catch (error) {
+        console.error('Failed to refresh the captcha:', error);
+      }
+    },
+    async registerUser() {
+      if (this.password !== this.passwordConfirmation) {
+        alert("Пароль и подтверждение пароля не совпадают!");
+        return;
+      }
+
+      const userData = {
+        name: this.name,
+        email: this.email,
+        password: this.password,
+        captcha: this.captcha,
+        captcha_token: this.captchaToken
+      };
+
+      try {
+        const response = await this.$axios.post('/api/user/register', userData);
+
+        if (response.data.result_code === 'COMPLETE') {
+          console.log('User registered successfully');
+          localStorage.setItem('authToken', response.data.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.data.user))
+          this.$emit('loginSuccess', response.data.data.user.name);
+          this.$router.push('/');
+        } else {
+          console.error('Error during registration:', response.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to register the user:', error);
+      }
+    },
     async register() {
-      // Placeholder for registration logic
-      console.log("Registration triggered");
-      this.$emit("register");
+      this.registerUser();
     }
   }
 };

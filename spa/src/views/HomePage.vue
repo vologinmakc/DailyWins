@@ -158,7 +158,7 @@ export default {
         const response = await this.$axios.get('/api/tasks?search[start_date_or_day]=' + this.selectedDate + '&&expand=sub_tasks');
         this.tasks = response.data.data;
       } catch (error) {
-        console.error('Ошибка при получении задач:', error);
+        console.error('Ошибка при получении задач');
       } finally {
         this.isLoading = false;
       }

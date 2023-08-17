@@ -45,6 +45,7 @@ services:
     depends_on:
       - dailywins_postgres
       - dailywins_redis
+    user: "1000:1000"
 
 
   dailywins_redis:

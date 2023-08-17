@@ -2,7 +2,7 @@
 
 import Vue from 'vue';
 import axios from 'axios';
-import { EventBus } from '@/event-bus.js';
+import {EventBus} from '@/event-bus.js';
 
 // Установите здесь любые глобальные настройки, например:
 axios.defaults.baseURL = 'http://127.0.0.1:8000';
@@ -25,9 +25,11 @@ axios.interceptors.request.use(
 // Добавление перехватчика ответов
 axios.interceptors.response.use(
     response => {
-        if (response.data.result_code === 'COMPLETE') {
+        if (response.status === 200 && response.data.result_code === 'COMPLETE') {
             return response;
         }
+
+        return response;
     },
     error => {
         if (error.response) {

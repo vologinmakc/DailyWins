@@ -170,10 +170,10 @@ export default {
           console.log('Задача успешно удалена');
           this.loadTasks();
         } else {
-          console.error('Ошибка при удалении задачи:', response.data.message);
+          console.error('Ошибка при удалении задачи');
         }
       } catch (error) {
-        console.error('Ошибка при удалении задачи:', error);
+        console.error('Ошибка при удалении задачи');
       }
     },
     calculateProgress(subTasks) {
@@ -232,10 +232,10 @@ export default {
         if (response.data.result_code === 'COMPLETE') {
           console.log('Статус подзадачи успешно обновлен');
         } else {
-          console.error('Ошибка при обновлении статуса:', response.data.message);
+          console.error('Ошибка при обновлении статуса');
         }
       } catch (error) {
-        console.error('Ошибка при обновлении статуса:', error);
+        console.error('Ошибка при обновлении статуса');
       }
     },
     openEditSubTaskModal(task, subTask) {
@@ -255,10 +255,10 @@ export default {
             mainTask.sub_tasks.splice(index, 1);
           }
         } else {
-          console.error('Ошибка при удалении подзадачи:', response.data.message);
+          console.error('Ошибка при удалении подзадачи');
         }
       } catch (error) {
-        console.error('Ошибка при удалении подзадачи:', error);
+        console.error('Ошибка при удалении подзадачи');
       } finally {
         this.isLoading = false;
       }
@@ -271,10 +271,10 @@ export default {
           this.showEditTaskModal = false;
           this.loadTasks();
         } else {
-          console.error('Ошибка при редактировании задачи:', response.data.message);
+          console.error('Ошибка при редактировании задачи');
         }
       } catch (error) {
-        console.error('Ошибка при редактировании задачи:', error);
+        console.error('Ошибка при редактировании задачи');
       } finally {
         this.isLoading = false;
       }
@@ -290,10 +290,10 @@ export default {
         if (response.data.result_code === 'COMPLETE') {
           this.showEditModal = false;
         } else {
-          console.error('Error:', response.data.message);
+          console.error('Error');
         }
       } catch (error) {
-        console.error('Failed:', error);
+        console.error('Failed');
       } finally {
         this.loadTasks();
         this.isLoading = false;
@@ -329,6 +329,8 @@ export default {
   font-weight: bold;
   text-align: left;
   background-color: #f1f1f1;
+  border-radius: 2px;
+  border: 2px solid #ebebec;
 }
 
 .tasks-header__type-task {

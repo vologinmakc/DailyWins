@@ -1,12 +1,10 @@
 import Vue from 'vue';
-
-Vue.use(VueRouter);
-
-
 import VueRouter from 'vue-router'
 import HomePage from './views/HomePage.vue'
 import LoginPage from './views/LoginPage.vue'
 import RegistrationPage from './views/RegistrationPage.vue'
+
+Vue.use(VueRouter);
 
 const routes = [
   {
@@ -32,8 +30,6 @@ const router = new VueRouter({
   routes
 })
 
-// Simple mock function to check if user is authenticated
-// TODO: Replace this with actual authentication check
 function isAuthenticated() {
   const user = localStorage.getItem("test_user");
   return user !== null;

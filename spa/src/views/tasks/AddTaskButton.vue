@@ -85,10 +85,10 @@ export default {
             this.showModal = false;
             this.loadTasks();
           } else {
-            console.error('Error adding the task:', response.data.message);
+            console.error('Error adding the task');
           }
         } catch (error) {
-          console.error('Failed to add the task:', error);
+          console.error('Failed to add the task');
         }
       }
     },

@@ -1,5 +1,8 @@
 <template>
   <v-container class="fill-height" fluid>
+    <v-overlay :value="isLoading">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
     <v-row align="center" justify="center">
       <v-col cols="12" sm="8" md="4">
         <v-card class="elevation-12">
@@ -28,7 +31,6 @@
                   <v-btn @click.prevent="redirectToRegistration" dark block>Регистрация</v-btn>
                 </v-col>
               </v-row>
-              <v-alert v-if="errorMessage" type="error">{{ errorMessage }}</v-alert>
             </v-form>
           </v-card-text>
         </v-card>
@@ -43,11 +45,12 @@ export default {
     return {
       email: '',
       password: '',
-      errorMessage: ''
+      isLoading: false
     };
   },
   methods: {
     async login() {
+      this.isLoading = true;
       try {
         const response = await this.$axios.post("/api/login", {
           username: this.email,
@@ -61,12 +64,11 @@ export default {
             this.$emit('loginSuccess', userResponse.data.data.name);
           }
           this.$router.push('/');
-        } else {
-          this.errorMessage = "Ошибка в данных пользователя";
         }
       } catch (error) {
-        this.errorMessage = "Ошибка в данных пользователя";
-        console.error("Error during authentication:", error);
+        console.error("Ошибка авторизации", error);
+      } finally {
+        this.isLoading = false; // окончание загрузки
       }
     },
     redirectToRegistration() {

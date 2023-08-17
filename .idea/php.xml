@@ -140,6 +140,16 @@
       <path value="$PROJECT_DIR$/src/vendor/laravel/helpers" />
       <path value="$PROJECT_DIR$/src/vendor/intervention/image" />
       <path value="$PROJECT_DIR$/src/vendor/caouecs/laravel-lang" />
+      <path value="$PROJECT_DIR$/src/vendor/archtechx/enums" />
+      <path value="$PROJECT_DIR$/src/vendor/symfony/polyfill-php81" />
+      <path value="$PROJECT_DIR$/src/vendor/laravel-lang/http-statuses" />
+      <path value="$PROJECT_DIR$/src/vendor/laravel-lang/publisher" />
+      <path value="$PROJECT_DIR$/src/vendor/laravel-lang/attributes" />
+      <path value="$PROJECT_DIR$/src/vendor/laravel-lang/lang" />
+      <path value="$PROJECT_DIR$/src/vendor/laravel-lang/common" />
+      <path value="$PROJECT_DIR$/src/vendor/dragon-code/support" />
+      <path value="$PROJECT_DIR$/src/vendor/dragon-code/contracts" />
+      <path value="$PROJECT_DIR$/src/vendor/dragon-code/pretty-array" />
     </include_path>
   </component>
   <component name="PhpInterpreters">

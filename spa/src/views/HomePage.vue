@@ -7,22 +7,24 @@
         <div class="date">
           <v-icon v-if="areAllTasksCompleted" large color="green" class="success-icon">mdi-check-circle-outline
           </v-icon>
-          <span class="font-weight-light" style="font-size: 1.5em;">{{ displayedDateLabel }} </span>
-          <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40">
-            <template v-slot:activator="{ on, attrs }">
+          <div class="date-labels">
+            <div class="day-name">{{ displayedDateLabel }}</div>
+            <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40">
+              <template v-slot:activator="{ on, attrs }">
               <span v-bind="attrs" v-on="on" style="font-size: 2.6em; cursor: pointer;">{{
                   formattedSelectedDate
                 }}</span>
-            </template>
-            <v-date-picker width="350px" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
-          </v-menu>
+              </template>
+              <v-date-picker width="350px" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
+            </v-menu>
+          </div>
 
           <!--   Сегодняшний день  пока уберем -->
-<!--          <div class="current-day-label">
-            <div>
-              Сегодня | <span class="current-day-label__current-day">{{ currentDayOfWeek }}</span>
-            </div>
-          </div>-->
+          <!--          <div class="current-day-label">
+                      <div>
+                        Сегодня | <span class="current-day-label__current-day">{{ currentDayOfWeek }}</span>
+                      </div>
+                    </div>-->
         </div>
         <v-col>
           <hr>
@@ -50,7 +52,7 @@
 
         <!-- Добавление задачи   -->
         <div class="text-right mt-4">
-          <AddTaskButton :selectedDate="selectedDate" :loadTasks="loadTasksForSelectedDate" />
+          <AddTaskButton :selectedDate="selectedDate" :loadTasks="loadTasksForSelectedDate"/>
         </div>
       </v-col>
       <v-col cols="4" class="right-column">
@@ -253,4 +255,18 @@ export default {
   letter-spacing: 0.5px;
   margin-top: 10px;
 }
+
+.date-labels {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.day-name {
+  font-size: 20px;
+  font-weight: 300;
+  margin-bottom: 5px;
+}
+
 </style>

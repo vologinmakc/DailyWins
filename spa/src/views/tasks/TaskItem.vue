@@ -393,6 +393,10 @@ export default {
   font-size: 0.9em;
 }
 
+.custom-expansion-panel-content /deep/ .v-expansion-panel-content__wrap {
+  padding: 0 !important;
+}
+
 .task-header {
   justify-content: space-between;
   font-size: 16px;

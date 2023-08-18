@@ -118,7 +118,7 @@ export default {
       const dateObj = new Date(this.selectedDate);
       return dateObj.toLocaleDateString('ru-RU', {
         year: 'numeric',
-        month: 'long',
+        month: 'numeric',
         day: 'numeric'
       });
     },

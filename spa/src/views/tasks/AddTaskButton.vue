@@ -83,6 +83,8 @@ export default {
           const response = await this.$axios.post('/api/tasks', taskData);
           if (response.data.result_code === 'COMPLETE') {
             this.showModal = false;
+            this.newTaskName = '';          // Очищаем имя новой задачи
+            this.subTasks = [{name: '', description: ''}];  // Сбрасываем подзадачи
             this.loadTasks();
           } else {
             console.error('Error adding the task');

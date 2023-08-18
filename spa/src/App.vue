@@ -59,9 +59,6 @@ export default {
       this.displaySnackbar(message, color);
     });
   },
-  mounted() {
-    console.log("Метод displaySnackbar из mounted:", this.displaySnackbar);
-  },
   methods: {
     navigateToLogin() {
       if (!this.isUserAuthenticated && this.$route.path !== '/login') {

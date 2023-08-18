@@ -5,7 +5,7 @@ import axios from 'axios';
 import {EventBus} from '@/event-bus.js';
 
 // Установите здесь любые глобальные настройки, например:
-axios.defaults.baseURL = 'http://127.0.0.1:8000';
+axios.defaults.baseURL = '';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Добавление перехватчика запросов

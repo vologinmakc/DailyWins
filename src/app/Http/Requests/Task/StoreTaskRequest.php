@@ -5,6 +5,7 @@ namespace App\Http\Requests\Task;
 use App\Constants\Other\WeekDays;
 use App\Constants\Task\TaskType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreTaskRequest extends FormRequest
 {
@@ -24,7 +25,14 @@ class StoreTaskRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'                   => 'required|string|max:255',
+            'name'                   => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('tasks', 'name')->where(function ($query) {
+                    return $query->where('start_date', $this->start_date);
+                }),
+            ],
             'description'            => 'nullable|string',
             'start_date'             => 'required|date|after_or_equal:today',
             'type'                   => 'required|integer|in:' . implode(',', TaskType::getList()), // добавляем валидацию для поля type
@@ -42,6 +50,7 @@ class StoreTaskRequest extends FormRequest
             'name.required' => 'Поле Имя обязательно для заполнения.',
             'name.string'   => 'Поле Имя должно быть строкой.',
             'name.max'      => 'Поле Имя не может быть длиннее 255 символов.',
+            'name.unique'   => 'Задача с таким именем уже существует на указанную дату.',
 
             'description.string' => 'Поле Описание должно быть строкой.',
 

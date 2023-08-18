@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-expansion-panel-header :class="{'task-completed': isAllSubTasksCompleted(task)}"
+    <v-expansion-panel-header :class="taskCompletedClass"
                               class="task-header d-flex align-center">
       <div class="task-text-wrapper flex-grow-1">
         {{ task.name }}
@@ -74,9 +74,30 @@
           </v-icon>
         </li>
       </ul>
+      <!--  Окно добавления подзадачи    -->
+      <v-btn @click="showAddSubTaskModal = true" color="#F1A553FF" dark small class="btn-add-sub-task mt-2 mb-2">
+        Добавить подзадачу
+      </v-btn>
+
     </v-expansion-panel-content>
     <!-- Modal Start -->
 
+    <!-- Создание подзадачи   -->
+    <v-dialog v-model="showAddSubTaskModal" persistent max-width="600px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Добавить подзадачу</span>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field v-model="newSubTask.name" label="Имя подзадачи" outlined></v-text-field>
+          <v-text-field v-model="newSubTask.description" label="Описание подзадачи" outlined></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="green darken-1" text @click="addNewSubTask">Добавить</v-btn>
+          <v-btn color="red darken-1" text @click="showAddSubTaskModal = false">Отмена</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <!-- Редактирование задачи   -->
     <v-dialog v-model="showEditTaskModal" persistent max-width="600px">
       <v-card>
@@ -124,6 +145,22 @@
     </v-dialog>
     <!-- Редактировать под задачи   -->
 
+    <!-- Подтверждение действия удаления задачи   -->
+    <v-dialog v-model="showConfirmDeleteModal" max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Подтвердите действие</span>
+        </v-card-title>
+        <v-card-text>
+          Вы уверены, что хотите удалить эту задачу?
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="green darken-1" text @click="confirmDelete">Подтвердить</v-btn>
+          <v-btn color="red darken-1" text @click="showConfirmDeleteModal = false">Отмена</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Modal End -->
   </div>
 </template>
@@ -140,7 +177,7 @@ export default {
       required: true
     }
   },
-  data () {
+  data() {
     return {
       editingSubTask: {name: '', description: ''},
       showEditModal: false,
@@ -150,17 +187,21 @@ export default {
         name: '',
         start_date: ''
       },
-      menuDate: false
+      menuDate: false,
+      showAddSubTaskModal: false,
+      newSubTask: {name: '', description: ''},
+      showConfirmDeleteModal: false,
+      taskToDelete: null,
+    }
+  },
+  computed: {
+    taskCompletedClass() {
+      return this.isAllSubTasksCompleted(this.task) ? 'task-completed' : '';
     }
   },
   methods: {
     isAllSubTasksCompleted() {
       return this.task.sub_tasks.every(sub_task => sub_task.status === this.TASK_STATUSES.TASK_COMPLETED);
-    },
-    confirmDeleteTask(task) {
-      if (confirm("Вы уверены, что хотите удалить эту задачу?")) {
-        this.deleteTask(task);
-      }
     },
     async deleteTask(taskToDelete) {
       try {
@@ -298,6 +339,35 @@ export default {
         this.loadTasks();
         this.isLoading = false;
       }
+    },
+    confirmDeleteTask(task) {
+      this.taskToDelete = task;
+      this.showConfirmDeleteModal = true;
+    },
+    confirmDelete() {
+      this.deleteTask(this.taskToDelete);
+      this.showConfirmDeleteModal = false;
+    },
+    async addNewSubTask() {
+      if (this.newSubTask.name.trim() !== '') {
+        const subTaskData = {
+          name: this.newSubTask.name,
+          description: this.newSubTask.description,
+          task_id: this.task.id
+        };
+
+        try {
+          const response = await this.$axios.post(`/api/subtasks/`, subTaskData);
+          if (response.data.result_code === 'COMPLETE') {
+            this.showAddSubTaskModal = false;
+            this.loadTasks();
+          } else {
+            console.error('Error adding the subtask');
+          }
+        } catch (error) {
+          console.error('Failed to add the subtask');
+        }
+      }
     }
   }
 }
@@ -333,12 +403,6 @@ export default {
   border: 2px solid #ebebec;
 }
 
-.tasks-header__type-task {
-  text-align: left;
-  font-weight: bold;
-  margin: 10px 10px;
-}
-
 .custom-expansion-panel-content {
   padding: 16px;
 }
@@ -366,6 +430,10 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.btn-add-sub-task {
+  float: right; /* Чтобы кнопка была справа */
 }
 
 .task-completed {

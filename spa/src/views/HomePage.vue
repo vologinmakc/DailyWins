@@ -17,12 +17,12 @@
             <v-date-picker width="350px" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
           </v-menu>
 
-          <!--   Сегодняшний день   -->
-          <div class="current-day-label">
+          <!--   Сегодняшний день  пока уберем -->
+<!--          <div class="current-day-label">
             <div>
               Сегодня | <span class="current-day-label__current-day">{{ currentDayOfWeek }}</span>
             </div>
-          </div>
+          </div>-->
         </div>
         <v-col>
           <hr>
@@ -30,7 +30,10 @@
         <v-overlay :value="isLoading">
           <v-progress-circular indeterminate size="64"></v-progress-circular>
         </v-overlay>
-        <div v-if="tasks.length === 0" style="font-size: 1.6em;">На сегодня у вас нет задач</div><!--   Сегодняшний день   -->
+        <div v-if="tasks.length === 0" class="empty-tasks-container">
+          <v-icon class="mb-2" size="50">mdi-note-alert</v-icon>
+          <div style="font-size: 1.6em;">Тут пока ничего нет</div>
+        </div>
 
         <!--   Tasks      -->
         <!--   Выводим ежедневные задачи      -->
@@ -239,14 +242,15 @@ export default {
   transform: none !important;
 }
 
-.current-day-label {
-  font-size: 1em;
-  margin-top: 20px;
-  text-align: right;
+.empty-tasks-container {
+  font-family: 'Roboto', serif;
+  text-align: center;
+  color: #555;
 }
 
-.current-day-label__current-day {
-  font-size: 1.5em;
-  font-weight: bold;
+.empty-tasks-container > div {
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  margin-top: 10px;
 }
 </style>

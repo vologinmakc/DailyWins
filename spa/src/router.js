@@ -31,12 +31,12 @@ const router = new VueRouter({
 })
 
 function isAuthenticated() {
-  const user = localStorage.getItem("test_user");
+  const user = localStorage.getItem("user");
   return user !== null;
 }
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth && !isAuthenticated()) {
+  if (to.meta.requiresAuth && !isAuthenticated() && to.path !== '/login') {
     next('/login');
   } else {
     next();

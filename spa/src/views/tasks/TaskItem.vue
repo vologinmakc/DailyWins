@@ -116,7 +116,7 @@
                   v-on="on"
               ></v-text-field>
             </template>
-            <v-date-picker v-model="editingTask.start_date" @input="menuDate = false" width="50%"></v-date-picker>
+            <v-date-picker v-model="editingTask.start_date" dark @input="menuDate = false" width="300px"></v-date-picker>
           </v-menu>
         </v-card-text>
         <v-card-actions>

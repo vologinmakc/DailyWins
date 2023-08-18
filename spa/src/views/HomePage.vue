@@ -15,7 +15,7 @@
                   formattedSelectedDate
                 }}</span>
               </template>
-              <v-date-picker width="350px" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
+              <v-date-picker width="300px" v-model="selectedDate" dark @input="onDateSelected"></v-date-picker>
             </v-menu>
           </div>
 
@@ -237,7 +237,8 @@ export default {
 .success-icon {
   font-size: 4em;
   vertical-align: middle;
-  margin-top: -20px;
+  margin-top: 35px;
+  margin-right: 10px;
 }
 
 .task-header .v-icon {

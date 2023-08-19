@@ -23,7 +23,7 @@
                 v-on="on"
                 class="custom-icon-size"
             >
-              mdi-dots-vertical
+              mdi-menu-down
             </v-icon>
           </template>
           <v-list>
@@ -60,23 +60,53 @@
             <div class="subtask-name">{{ subTask.name }}</div>
             <div class="subtask-description">{{ subTask.description }}</div>
           </div>
+          <v-menu offset-y>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                  v-bind="attrs"
+                  v-on="on"
+                  class="custom-icon-size"
+              >
+                mdi-menu
+              </v-icon>
+            </template>
+            <v-list>
+              <v-list-item @click="toggleSubTaskStatus(task, subTask)">
+                <v-list-item-icon>
+                  <v-icon>
+                    {{
+                      subTask.status === TASK_STATUSES.TASK_COMPLETED ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'
+                    }}
+                  </v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>Выполнено</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="openEditSubTaskModal(task, subTask)">
+                <v-list-item-icon>
+                  <v-icon>mdi-pencil</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>Редактировать</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="deleteSubTask(task, subTask)">
+                <v-list-item-icon>
+                  <v-icon>mdi-trash-can-outline</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>Удалить</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </v-menu>
 
-          <v-icon @click="toggleSubTaskStatus(task, subTask)" class="custom-icon-size">
-            {{
-              subTask.status === TASK_STATUSES.TASK_COMPLETED ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'
-            }}
-          </v-icon>
-          <v-icon @click="openEditSubTaskModal(task, subTask)" class="ml-2 edit-icon custom-icon-size">
-            mdi-pencil
-          </v-icon>
-          <v-icon @click="deleteSubTask(task, subTask)" class="ml-2 delete-task-icon custom-icon-size">
-            mdi-trash-can-outline
-          </v-icon>
         </li>
       </ul>
       <!--  Окно добавления подзадачи    -->
-      <v-btn @click="showAddSubTaskModal = true" color="#F1A553FF" dark small class="btn-add-sub-task mt-2 mb-2">
-        Добавить подзадачу
+      <v-btn @click="showAddSubTaskModal = true" color="success" fab depressed small class="btn-add-sub-task mt-2 mb-2">
+        <v-icon>mdi-note-plus</v-icon>
       </v-btn>
 
     </v-expansion-panel-content>
@@ -389,7 +419,7 @@ export default {
 }
 
 .subtask-description {
-  color: gray;
+  color: #3b3b3b;
   font-size: 0.9em;
 }
 
@@ -402,13 +432,24 @@ export default {
   font-size: 16px;
   font-weight: bold;
   text-align: left;
-  background-color: #f1f1f1;
-  border-radius: 2px;
-  border: 2px solid #ebebec;
+  color: #273354;
+  background-image: url("@/assets/img/free-abstract-pattern-vector.jpg");
+  background-size: 50px;
+  background-repeat: repeat;
+  background-position: top left
 }
 
 .custom-expansion-panel-content {
   padding: 16px;
+
+  background: linear-gradient(
+      rgba(255,255,255, 0) .9em, rgba(0, 0, 0, .15) 1em)
+  0 0,
+  linear-gradient(90deg,
+      rgba(255,255,255, 0) .9em, rgba(0, 0, 0, .15) 1em)
+  0 0;
+  background-size: 1em 1em;
+  background-color: white;
 }
 
 .subtask-item {
@@ -427,7 +468,7 @@ export default {
 }
 
 .v-progress-linear__bar {
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .subtask-details {

@@ -1,6 +1,10 @@
 <template>
   <div>
-    <v-btn @click="showModal = true" color="green" dark small>Добавить задачу</v-btn>
+    <div class="center-container">
+      <v-btn @click="showModal = true" class="btn-add" fab depressed small color="success">
+        <v-icon>mdi-pen-plus</v-icon>
+      </v-btn>
+    </div>
     <v-dialog v-model="showModal" persistent max-width="600px">
       <v-card>
         <v-card-title>
@@ -100,3 +104,16 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+
+.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-add {
+  font-size: 26px !important;
+}
+</style>

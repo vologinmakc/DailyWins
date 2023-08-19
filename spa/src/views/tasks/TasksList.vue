@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-expansion-panels multiple v-if="tasks.length > 0" class="task-rounded box-shadow">
+    <v-expansion-panels popout multiple v-if="tasks.length > 0">
       <v-expansion-panel v-for="task in tasks" :key="task.name">
         <TaskItem :loadTasks="loadTasks" :task="task" :TASK_STATUSES="TASK_STATUSES"></TaskItem>
       </v-expansion-panel>
@@ -79,7 +79,7 @@ export default {
 }
 
 .task-rounded {
-  border-radius: 20px;
+  border-radius: 0;
   overflow: hidden;
 }
 

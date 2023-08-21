@@ -3,6 +3,7 @@
     <v-expansion-panel-header :class="taskCompletedClass"
                               class="task-header d-flex align-center">
       <div class="task-text-wrapper flex-grow-1">
+        <v-icon color="#ccc">mdi-tag-outline</v-icon>
         {{ task.name }}
         <v-progress-linear
             v-if="task.sub_tasks && task.sub_tasks.length"

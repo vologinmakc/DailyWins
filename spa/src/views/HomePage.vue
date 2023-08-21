@@ -51,11 +51,23 @@
             <small style="font-weight: normal">Задачи которые будут повторяться в указанные дни недели</small>
             <v-divider class="mb-5"></v-divider>
           </div>
-          <TasksList :selectedDate="selectedDate" :loadTasks="loadTasksForSelectedDate" :tasks="dailyTasks" :TASK_STATUSES="TASK_STATUSES"/>
+          <TasksList :selectedDate="selectedDate" :loadTasks="loadTasksForSelectedDate" :tasks="dailyTasks"
+                     :TASK_STATUSES="TASK_STATUSES"/>
         </div>
 
         <!--   Остальные типы задач     -->
-<!--        <TasksList :loadTasks="loadTasksForSelectedDate" :tasks="nonDailyTasks" :TASK_STATUSES="TASK_STATUSES"/>-->
+        <div v-if="nonDailyTasks.length > 0" class="mt-10">
+          <v-divider class="mb-5"></v-divider>
+          <div class="tasks-header__type-task">
+            <v-icon color="orange">mdi-repeat-off</v-icon>
+            Задачи только на сегодня
+            <br>
+            <small style="font-weight: normal">Задачи которые назначены на сегодняшний день</small>
+            <v-divider class="mb-5"></v-divider>
+          </div>
+          <TasksList :selectedDate="selectedDate" :loadTasks="loadTasksForSelectedDate" :tasks="nonDailyTasks"
+                     :TASK_STATUSES="TASK_STATUSES"/>
+        </div>
         <!--   Остальные типы задач     -->
 
         <!-- Добавление задачи   -->
@@ -72,6 +84,7 @@
 <script>
 import TasksList from './tasks/TasksList.vue';
 import AddTaskButton from './tasks/AddTaskButton.vue';
+import {TASK_TYPE} from "@/constants";
 
 export default {
   name: 'HomePage',
@@ -154,7 +167,10 @@ export default {
       return this.daysMapping[dayNameEnglish];
     },
     dailyTasks() {
-      return this.tasks.filter(task => task.type === 2);
+      return this.tasks.filter(task => task.type === TASK_TYPE.TYPE_RECURRING);
+    },
+    nonDailyTasks() {
+      return this.tasks.filter(task => task.type === TASK_TYPE.TYPE_ONE_OFF);
     }
   },
   methods: {

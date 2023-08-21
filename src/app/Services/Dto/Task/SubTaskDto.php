@@ -8,7 +8,6 @@ class SubTaskDto extends BaseDto
 {
     public ?string $name;
     public ?string $description;
-    public ?int $status;
     public ?int $taskId;
 
 }

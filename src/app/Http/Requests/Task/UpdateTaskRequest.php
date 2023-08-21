@@ -17,6 +17,7 @@ class UpdateTaskRequest extends FormRequest
             'name'        => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
             'start_date'  => 'sometimes|required|date|after_or_equal:today',
+            'end_date'    => 'sometimes|required|date|after_or_equal:today',
             'type'        => 'sometimes|required|in:' . implode(',', TaskType::getList())
         ];
 
@@ -32,18 +33,25 @@ class UpdateTaskRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required'             => 'Поле "Имя" обязательно для заполнения.',
-            'name.string'               => 'Поле "Имя" должно быть строкой.',
-            'name.max'                  => 'Поле "Имя" не должно превышать 255 символов.',
-            'description.string'        => 'Поле "Описание" должно быть строкой.',
+            'name.required' => 'Поле "Имя" обязательно для заполнения.',
+            'name.string'   => 'Поле "Имя" должно быть строкой.',
+            'name.max'      => 'Поле "Имя" не должно превышать 255 символов.',
+
+            'description.string' => 'Поле "Описание" должно быть строкой.',
+
             'start_date.required'       => 'Поле "Дата начала" обязательно для заполнения.',
             'start_date.date'           => 'Поле "Дата начала" должно быть датой.',
             'start_date.after_or_equal' => 'Поле "Дата начала" должно быть равной или позже текущей даты.',
-            'type.required'             => 'Поле "Тип задачи" обязательно для заполнения.',
-            'type.in'                   => 'Выбранный "Тип задачи" недопустим.',
-            'recurrence.required'       => 'Поле "Дни регулярности" обязательно для заполнения, так как тип задачи регулярный.',
-            'recurrence.array'          => 'Поле "Дни регулярности" должно быть массивом.',
-            'recurrence.*.in'           => 'Выбранный день регулярности недопустим.',
+            'end_date.required'         => 'Поле "Дата окончания" обязательно для заполнения.',
+            'end_date.date'             => 'Поле "Дата окончания" должно быть датой.',
+            'end_date.after_or_equal'   => 'Поле "Дата окончания" должно быть равной или позже текущей даты.',
+
+            'type.required' => 'Поле "Тип задачи" обязательно для заполнения.',
+            'type.in'       => 'Выбранный "Тип задачи" недопустим.',
+
+            'recurrence.required' => 'Поле "Дни регулярности" обязательно для заполнения, так как тип задачи регулярный.',
+            'recurrence.array'    => 'Поле "Дни регулярности" должно быть массивом.',
+            'recurrence.*.in'     => 'Выбранный день регулярности недопустим.',
         ];
     }
 }

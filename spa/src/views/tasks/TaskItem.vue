@@ -14,7 +14,6 @@
           {{ completedSubTasks(task.sub_tasks) }} / {{ task.sub_tasks.length }}
         </v-progress-linear>
       </div>
-
       <template v-slot:actions>
         <v-menu offset-y>
           <template v-slot:activator="{ on, attrs }">
@@ -59,6 +58,7 @@
           <div class="subtask-details">
             <div class="subtask-name">{{ subTask.name }}</div>
             <div class="subtask-description">{{ subTask.description }}</div>
+            <v-divider></v-divider>
           </div>
           <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
@@ -136,18 +136,35 @@
         </v-card-title>
         <v-card-text>
           <v-text-field v-model="editingTask.name" label="Имя задачи" outlined></v-text-field>
-          <v-menu ref="menu" v-model="menuDate" :close-on-content-click="false" :nudge-right="40">
+          <v-menu ref="menu" v-model="menuStartDate" :close-on-content-click="false" :nudge-right="40">
             <template v-slot:activator="{ on, attrs }">
               <v-text-field
                   v-model="editingTask.start_date"
                   label="Дата начала"
                   outlined
+                  type="date"
+                  style="max-width: 300px"
                   v-bind="attrs"
                   v-on="on"
               ></v-text-field>
             </template>
-            <v-date-picker v-model="editingTask.start_date" dark @input="menuDate = false" width="300px"></v-date-picker>
+            <v-date-picker v-model="editingTask.start_date" dark @input="menuStartDate = false" width="300px"></v-date-picker>
           </v-menu>
+          <v-menu ref="menu" v-model="menuEndDate" :close-on-content-click="false" :nudge-right="40">
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                  v-model="editingTask.end_date"
+                  label="Укажите дату окончания задачи"
+                  outlined
+                  type="date"
+                  style="max-width: 300px"
+                  v-bind="attrs"
+                  v-on="on"
+              ></v-text-field>
+            </template>
+            <v-date-picker v-model="editingTask.end_date" dark @input="menuEndDate = false" width="300px"></v-date-picker>
+          </v-menu>
+
         </v-card-text>
         <v-card-actions>
           <v-btn color="green darken-1" text @click="updateTask">Обновить</v-btn>
@@ -205,6 +222,11 @@ export default {
     loadTasks: {
       type: Function,
       required: true
+    },
+    selectedDate: {
+      type: String,
+      required: true,
+      default: new Date().toISOString().substr(0, 10)
     }
   },
   data() {
@@ -215,9 +237,11 @@ export default {
       editingTask: {
         id: null,
         name: '',
-        start_date: ''
+        start_date: '',
+        end_date: ''
       },
-      menuDate: false,
+      menuStartDate: false,
+      menuEndDate: false,
       showAddSubTaskModal: false,
       newSubTask: {name: '', description: ''},
       showConfirmDeleteModal: false,
@@ -297,7 +321,8 @@ export default {
     async updateSubTaskStatus(subTask) {
       try {
         const response = await this.$axios.put(`/api/subtasks/${subTask.id}/status`, {
-          status: subTask.status
+          status: subTask.status,
+          date: this.selectedDate
         });
 
         if (response.data.result_code === 'COMPLETE') {
@@ -427,29 +452,32 @@ export default {
   padding: 0 !important;
 }
 
+.v-expansion-panel-content {
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+}
+
 .task-header {
   justify-content: space-between;
   font-size: 16px;
   font-weight: bold;
   text-align: left;
   color: #273354;
-  background-image: url("@/assets/img/free-abstract-pattern-vector.jpg");
-  background-size: 50px;
-  background-repeat: repeat;
-  background-position: top left
+  border: 1px solid #ccc;
 }
 
 .custom-expansion-panel-content {
   padding: 16px;
 
-  background: linear-gradient(
+  /*background: linear-gradient(
       rgba(255,255,255, 0) .9em, rgba(0, 0, 0, .15) 1em)
   0 0,
   linear-gradient(90deg,
       rgba(255,255,255, 0) .9em, rgba(0, 0, 0, .15) 1em)
   0 0;
   background-size: 1em 1em;
-  background-color: white;
+  background-color: white;*/
 }
 
 .subtask-item {
@@ -483,16 +511,18 @@ export default {
 
 .task-completed {
   background-color: #4caf50 !important;
+  background-image: none !important;
   color: white;
-}
-
-.delete-task-icon {
-  color: rgb(241, 165, 83) !important;
-  cursor: pointer;
 }
 
 .task-header .v-icon {
   transform: none !important;
+}
+
+.task-text-wrapper {
+  font-family: Nunito, Poppins, Helvetica, Arial, sans-serif;
+  font-size: 1.1em;
+  font-weight: normal;
 }
 
 </style>

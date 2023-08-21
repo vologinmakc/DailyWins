@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('name');
             $table->string('description', '255')->nullable();
             $table->timestamp('start_date');
+            $table->timestamp('end_date')->nullable();
             $table->jsonb('recurrence')->nullable();
             $table->unsignedSmallInteger('type');
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();

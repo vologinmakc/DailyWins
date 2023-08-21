@@ -73,7 +73,8 @@ class SubTaskController extends BaseController
     {
         $statusDto = new SubTaskStatusDto($request->validate([
             'status'     => 'required|in:' . implode(',', TaskStatuses::getList()),
-            'commentary' => 'nullable|string|255'
+            'commentary' => 'nullable|string|255',
+            'date'       => 'nullable|date'
         ]));
 
         if ($subTask->created_by == Auth::id()) {

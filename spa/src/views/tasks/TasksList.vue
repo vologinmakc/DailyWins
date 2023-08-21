@@ -1,8 +1,8 @@
 <template>
   <div>
-    <v-expansion-panels popout multiple v-if="tasks.length > 0">
+    <v-expansion-panels flat popout multiple v-if="tasks.length > 0">
       <v-expansion-panel v-for="task in tasks" :key="task.name">
-        <TaskItem :loadTasks="loadTasks" :task="task" :TASK_STATUSES="TASK_STATUSES"></TaskItem>
+        <TaskItem :selectedDate="selectedDate" :loadTasks="loadTasks" :task="task" :TASK_STATUSES="TASK_STATUSES"></TaskItem>
       </v-expansion-panel>
     </v-expansion-panels>
   </div>
@@ -23,6 +23,11 @@ export default {
     loadTasks: {
       type: Function,
       required: true
+    },
+    selectedDate: {
+      type: String,
+      required: true,
+      default: new Date().toISOString().substr(0, 10)
     }
   },
   methods: {

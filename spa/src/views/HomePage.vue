@@ -8,7 +8,11 @@
           <v-icon v-if="areAllTasksCompleted" large color="green" class="success-icon">mdi-check-circle-outline
           </v-icon>
           <div class="date-labels">
-            <div class="day-name">{{ displayedDateLabel }}</div>
+            <div class="day-name">
+              <v-icon color="green">mdi-clipboard-text-clock-outline
+              </v-icon>
+              {{ displayedDateLabel }}
+            </div>
             <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40">
               <template v-slot:activator="{ on, attrs }">
               <span v-bind="attrs" v-on="on" style="font-size: 2.6em; cursor: pointer;">{{
@@ -27,7 +31,7 @@
                     </div>-->
         </div>
         <v-col>
-          <hr>
+          <v-divider></v-divider>
         </v-col>
         <v-overlay :value="isLoading">
           <v-progress-circular indeterminate size="64"></v-progress-circular>
@@ -41,13 +45,17 @@
         <!--   Выводим ежедневные задачи      -->
         <div v-if="dailyTasks.length > 0">
           <div class="tasks-header__type-task">
+            <v-icon color="orange">mdi-tag</v-icon>
             Ежедневные задачи
+            <br>
+            <small style="font-weight: normal">Задачи которые будут повторяться в указанные дни недели</small>
+            <v-divider class="mb-5"></v-divider>
           </div>
-          <TasksList :loadTasks="loadTasksForSelectedDate" :tasks="dailyTasks" :TASK_STATUSES="TASK_STATUSES"/>
+          <TasksList :selectedDate="selectedDate" :loadTasks="loadTasksForSelectedDate" :tasks="dailyTasks" :TASK_STATUSES="TASK_STATUSES"/>
         </div>
 
         <!--   Остальные типы задач     -->
-        <TasksList :loadTasks="loadTasksForSelectedDate" :tasks="nonDailyTasks" :TASK_STATUSES="TASK_STATUSES"/>
+<!--        <TasksList :loadTasks="loadTasksForSelectedDate" :tasks="nonDailyTasks" :TASK_STATUSES="TASK_STATUSES"/>-->
         <!--   Остальные типы задач     -->
 
         <!-- Добавление задачи   -->
@@ -145,14 +153,8 @@ export default {
       const dayNameEnglish = new Date(this.selectedDate).toLocaleString('en-US', {weekday: 'long'});
       return this.daysMapping[dayNameEnglish];
     },
-    currentDayOfWeek() {
-      return new Date().toLocaleString('ru-RU', {weekday: 'long'});
-    },
     dailyTasks() {
-      return this.tasks.filter(task => task.type === 1);
-    },
-    nonDailyTasks() {
-      return this.tasks.filter(task => task.type !== 1);
+      return this.tasks.filter(task => task.type === 2);
     }
   },
   methods: {
@@ -160,7 +162,7 @@ export default {
     async loadTasksForSelectedDate() {
       try {
         this.isLoading = true;
-        const response = await this.$axios.get('/api/tasks?search[start_date_or_day]=' + this.selectedDate + '&&expand=sub_tasks');
+        const response = await this.$axios.get('/api/tasks?search[start_date_or_day]=' + this.selectedDate + '&&expand=sub_tasks&&sort=id');
         this.tasks = response.data.data;
       } catch (error) {
         console.error('Ошибка при получении задач');
@@ -220,12 +222,13 @@ export default {
 }
 
 .date {
-  margin-bottom: 20px;
+  margin-bottom: 1px;
 }
 
 .tasks-header__type-task {
   text-align: left;
   font-weight: bold;
+  font-size: 1.2em;
   margin: 10px 10px;
 }
 
@@ -260,14 +263,15 @@ export default {
 .date-labels {
   display: inline-flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   vertical-align: middle;
 }
 
 .day-name {
   font-size: 20px;
   font-weight: 300;
-  margin-bottom: 5px;
+  margin-bottom: 0;
+  padding-left: 0;
 }
 
 </style>

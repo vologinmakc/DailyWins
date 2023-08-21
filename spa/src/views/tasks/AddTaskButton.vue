@@ -17,8 +17,47 @@
               :items="taskTypes"
               label="Тип задачи"
               outlined
-              disabled
           ></v-select>
+          <v-combobox
+              v-if="selectedTaskType === 2"
+              v-model="selectedDays"
+              :items="daysOfWeek"
+              item-text="label"
+              item-value="value"
+              label="Выберите дни недели"
+              outlined
+              multiple
+              chips
+              clearable
+              deletable-chips
+          ></v-combobox>
+          <!--  Поле для указания завершения повторяющейся задачи -->
+          <v-menu
+              v-if="selectedTaskType === 2"
+              ref="menuEndDate"
+              v-model="menuEndDate"
+              :close-on-content-click="false"
+              :nudge-right="40"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                  v-model="endRepeatDate"
+                  label="Дата окончания повторения"
+                  type="date"
+                  style="max-width: 300px"
+                  outlined
+                  v-bind="attrs"
+                  v-on="on"
+              ></v-text-field>
+              <v-btn v-if="selectedTaskType === 2" small icon @click="clearEndDate">
+                <small style="color: crimson">Сбросить дату</small>
+              </v-btn>
+            </template>
+            <v-date-picker style="min-width: 300px" v-model="endRepeatDate" dark @input="menuEndDate = false" width="300px"></v-date-picker>
+          </v-menu>
+
+
+
           <div v-if="showSubTasks">
             <div v-for="(subTask, index) in subTasks" :key="index">
               <v-text-field v-model="subTask.name" label="Имя подзадачи" outlined></v-text-field>
@@ -38,6 +77,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
   </div>
 </template>
 
@@ -62,10 +102,28 @@ export default {
         {text: 'На сегодня', value: 1},
         {text: 'Повторяющееся', value: 2}
       ],
-      selectedTaskType: 1, // пока так
+      selectedTaskType: '', // пока так
       showSubTasks: false,
-      subTasks: [{name: '', description: ''}]
+      subTasks: [{name: '', description: ''}],
+      daysOfWeek: [
+        {label: 'Понедельник', value: 1},
+        {label: 'Вторник', value: 2},
+        {label: 'Среда', value: 3},
+        {label: 'Четверг', value: 4},
+        {label: 'Пятница', value: 5},
+        {label: 'Суббота', value: 6},
+        {label: 'Воскресенье', value: 7}
+      ],
+      selectedDays: [],
+      showRepeatDaysModal: false,
+      endRepeatDate: null,
+      menuEndDate: false,
     };
+  },
+  computed: {
+    selectedDaysValues() {
+      return this.selectedDays.map(day => day.value);
+    }
   },
   methods: {
     toggleSubTasks() {
@@ -78,17 +136,18 @@ export default {
       if (this.newTaskName.trim() !== '') {
         const taskData = {
           name: this.newTaskName,
-          type: this.selectedTaskType,  // Добавляем тип задачи
+          type: this.selectedTaskType,
           subtasks: this.subTasks.filter(st => st.name.trim() !== ''),
-          start_date: this.selectedDate, // Добавляем выбранную дату
+          start_date: this.selectedDate,
+          recurrence: this.selectedDaysValues, // Добавляем выбранные дни недели
+          end_date: this.endRepeatDate
         };
 
         try {
           const response = await this.$axios.post('/api/tasks', taskData);
           if (response.data.result_code === 'COMPLETE') {
             this.showModal = false;
-            this.newTaskName = '';          // Очищаем имя новой задачи
-            this.subTasks = [{name: '', description: ''}];  // Сбрасываем подзадачи
+            this.resetFields();
             this.loadTasks();
           } else {
             console.error('Error adding the task');
@@ -98,8 +157,23 @@ export default {
         }
       }
     },
+    confirmRepeatDays() {
+      this.showRepeatDaysModal = false;
+      this.addTask();
+    },
     addSubTask() {
       this.subTasks.push({name: '', description: ''});
+    },
+    clearEndDate() {
+      this.endRepeatDate = null;
+    },
+    resetFields() {
+      this.newTaskName = '';
+      this.selectedTaskType = '';
+      this.showSubTasks = false;
+      this.subTasks = [{name: '', description: ''}];
+      this.selectedDays = [];
+      this.endRepeatDate = null;
     }
   }
 }

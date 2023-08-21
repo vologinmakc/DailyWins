@@ -12,6 +12,7 @@ class TaskDto extends BaseDto
     public ?int    $type;
     public ?string $description;
     public ?string $startDate;
+    public ?string $endDate;
     public ?string $date;
     public         $recurrence;
 }

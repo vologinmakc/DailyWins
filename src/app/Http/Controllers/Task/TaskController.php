@@ -6,12 +6,15 @@ use App\Filters\FilterApplier;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
+use App\Http\Response\TaskResponse;
+use App\Models\Task\SubTask;
 use App\Models\Task\Task;
 use App\Rules\RuleApplier;
 use App\Services\Dto\Task\TaskDto;
 use App\Services\Task\Handler\TaskHandlerFactory;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -26,15 +29,7 @@ class TaskController extends BaseController
 
     public function index(Request $request, FilterApplier $filterApplier, RuleApplier $ruleApplier)
     {
-        // TODO сделать отдельно потом
-        Task::setExpandField([
-            'user'      => function (Task $task) {
-                return $task->author;
-            },
-            'sub_tasks' => function (Task $task) {
-                return $task->subtasks;
-            }
-        ]);
+        Task::setExpandField(TaskResponse::expand());
         $query = $ruleApplier->applyRules(Task::query());
         $query = $filterApplier->applyFilters($query, $request);
         $tasks = $query->get();

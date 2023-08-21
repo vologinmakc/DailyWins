@@ -24,14 +24,11 @@ class TaskRepository implements TaskRepositoryInterface
             'name'        => $taskDto->name,
             'description' => $taskDto->description,
             'start_date'  => $taskDto->startDate,
+            'end_date'  => $taskDto->endDate,
             'type'        => $taskDto->type,
             'recurrence'  => $taskDto->recurrence,
             'created_by'  => Auth::id()
         ]);
-
-        foreach ($taskDto->subtasks as $subtaskData) {
-            $this->subTaskRepository->create(new SubTaskDto($subtaskData + ['task_id' => $task->id]));
-        }
 
         return $task;
     }

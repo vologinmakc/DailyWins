@@ -8,4 +8,6 @@ class SubTaskStatusDto extends BaseDto
 {
     public int     $status;
     public ?string $commentary;
+
+    public ?string $date;
 }

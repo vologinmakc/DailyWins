@@ -35,6 +35,7 @@ class StoreTaskRequest extends FormRequest
             ],
             'description'            => 'nullable|string',
             'start_date'             => 'required|date|after_or_equal:today',
+            'end_date'               => 'nullable|date|after_or_equal:today',
             'type'                   => 'required|integer|in:' . implode(',', TaskType::getList()), // добавляем валидацию для поля type
             'recurrence'             => 'required_if:type,' . TaskType::TYPE_RECURRING . '|nullable|array',
             'recurrence.*'           => 'in:' . implode(',', WeekDays::getList()),
@@ -57,6 +58,8 @@ class StoreTaskRequest extends FormRequest
             'start_date.required'       => 'Поле Дата начала обязательно для заполнения.',
             'start_date.date'           => 'Поле Дата начала должно быть датой.',
             'start_date.after_or_equal' => 'Поле Дата начала не может быть раньше текущей даты.',
+            'end_date.date'             => 'Поле Дата окончания должно быть датой.',
+            'end_date.after_or_equal'   => 'Поле Дата окончания не может быть раньше текущей даты.',
 
             'type.required' => 'Поле Тип обязательно для заполнения.',
             'type.integer'  => 'Поле Тип должно быть целым числом.',

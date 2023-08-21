@@ -7,6 +7,7 @@ use App\Casts\Task\SubTaskStatusCast;
 use App\Constants\Task\TaskStatuses;
 use App\Constants\Task\TaskType;
 use App\Models\BaseModel;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -29,6 +30,11 @@ class SubTask extends BaseModel
         'status' => SubTaskStatusCast::class
     ];
 
+    /**
+     * Для повторяющихся задач есть Cast SubTaskStatusResolver
+     * @param $date
+     * @return mixed|null
+     */
     public function getSubTaskStatusForDate($date = null)
     {
         $statusRelation = $this->subTaskStatus();

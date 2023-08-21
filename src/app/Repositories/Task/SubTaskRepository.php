@@ -19,7 +19,6 @@ class SubTaskRepository implements SubTaskRepositoryInterface
         return SubTask::create([
             'name'        => $subTaskDto->name,
             'description' => $subTaskDto->description,
-            'status'      => $subTaskDto->status,
             'task_id'     => $subTaskDto->taskId,
             'created_by'  => Auth::id()
         ]);
@@ -35,7 +34,7 @@ class SubTaskRepository implements SubTaskRepositoryInterface
     public function updateStatus(SubTask $subTask, SubTaskStatusDto $dto)
     {
         SubTaskStatus::updateOrCreate(
-            ['sub_task_id' => $subTask->id, 'date' => now()->format('Y-m-d')],
+            ['sub_task_id' => $subTask->id, 'date' => $dto->date ?? now()->format('Y-m-d')],
             $dto->getAttribute()
         );
 

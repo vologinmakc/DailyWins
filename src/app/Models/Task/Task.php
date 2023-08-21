@@ -22,11 +22,12 @@ class Task extends BaseModel
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'status', 'created_by', 'start_date', 'description', 'type', 'recurrence'];
+    protected $fillable = ['name', 'status', 'created_by', 'start_date', 'end_date', 'description', 'type', 'recurrence'];
     protected $appends  = ['status'];
 
     protected $casts = [
         'start_date' => 'date:Y-m-d',
+        'end_date'   => 'date:Y-m-d',
         'recurrence' => 'array',
         'history'    => TaskHistoryCast::class,
         'status'     => TaskStatusCast::class
